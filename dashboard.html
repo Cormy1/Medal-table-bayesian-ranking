@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard · Olympic Rankings</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./assets/css/base.css">
+  <link rel="stylesheet" href="./assets/css/layout.css">
+  <link rel="stylesheet" href="./assets/css/dashboard.css">
+</head>
+
+<body>
+  <div id="nav-placeholder"></div>
+
+  <main id="main">
+    <section id="dashboard" style="padding-top: calc(3.75rem + 2rem);">
+      <div class="container-wide">
+
+        <div class="dash-header reveal">
+          <p class="section-label">Interactive Dashboard</p>
+          <h1 class="section-title">Explore the rankings</h1>
+          <p class="section-body">Select an Olympic Games edition, ranking method, and map covariate. Click any country on the map or table to highlight and compare it.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="dash-controls reveal">
+          <div class="control-group">
+            <label for="sel-games">Olympic Games</label>
+            <select id="sel-games">
+              <option value="tokyo-2020">Tokyo 2020</option>
+              <option value="rio-2016">Rio 2016</option>
+              <option value="london-2012">London 2012</option>
+              <option value="beijing-2008">Beijing 2008</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="sel-ranking">Ranking method</label>
+            <select id="sel-ranking">
+              <option value="Rank.Bayes.cond">Posterior Mean Rank</option>
+              <option value="Rank.Median.Bayes">Posterior Median Rank</option>
+              <option value="Rank.dp">U-Index Rank</option>
+              <option value="Rank.percap">Per-capita Rank</option>
+              <option value="Rank.Total">Total Medals Rank</option>
+            </select>
+          </div>
+          <div class="control-group">
+            <label for="sel-variable">Map colour variable</label>
+            <select id="sel-variable">
+              <option value="Rank.Bayes.cond">Posterior Mean Rank</option>
+              <option value="Rank.Median.Bayes">Posterior Median Rank</option>
+              <option value="Rank.dp">U-Index Rank</option>
+              <option value="Rank.percap">Per-capita Rank</option>
+              <option value="Rank.Total">Total Medals Rank</option>
+              <option value="Post_permil">Post. Median Rate</option>
+              <option value="total_pop_july">Population (000s)</option>
+              <option value="NY.GDP.PCAP.KD">GDP per capita</option>
+              <option value="life_expectancy_birth">Life Expectancy</option>
+            </select>
+          </div>
+          <!-- Dual-handle interval filter -->
+          <div class="slider-group">
+            <label>Filter interval</label>
+            <div style="display:flex;gap:var(--space-2);align-items:center;">
+              <input type="range" id="slider-lo" min="1" max="20" value="1" step="1">
+              <input type="range" id="slider-hi" min="1" max="20" value="20" step="1">
+            </div>
+            <div class="slider-range-display" id="slider-display">1 – 20</div>
+          </div>
+          <button class="btn btn-ghost" id="btn-reset" style="align-self:flex-end;">
+            <i data-lucide="rotate-ccw" width="14" height="14"></i> Reset
+          </button>
+        </div>
+
+        <!-- Main layout -->
+        <div class="dash-layout">
+
+          <!-- Table -->
+          <div class="dash-card">
+            <div class="dash-card-header">
+              <span class="dash-card-title"><i data-lucide="list-ordered" width="15" height="15"></i> Ranking Table</span>
+              <span id="table-count" style="font-size:var(--text-xs);color:var(--color-text-muted);">Loading…</span>
+            </div>
+            <div class="search-row">
+              <input type="text" class="search-input" id="table-search" placeholder="Search country…" aria-label="Search countries">
+            </div>
+            <div class="rank-table-wrap">
+              <table class="rank-table" aria-label="Olympic country rankings">
+                <thead>
+                  <tr>
+                    <th class="rank-num">#</th>
+                    <th></th>
+                    <th>Country</th>
+                    <th style="text-align:right">Total</th>
+                    <th style="text-align:right">Per-mill</th>
+                  </tr>
+                </thead>
+                <tbody id="ranking-tbody">
+                  <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-text-muted);">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Map + detail -->
+          <div>
+            <div class="dash-card">
+              <div class="dash-card-header">
+                <span class="dash-card-title"><i data-lucide="map" width="15" height="15"></i> Medal Choropleth</span>
+                <span id="map-subtitle" style="font-size:var(--text-xs);color:var(--color-text-muted);">Tokyo 2020</span>
+              </div>
+              <div id="map" role="application" aria-label="Interactive world map of Olympic rankings"></div>
+              <div class="map-legend" id="map-legend" aria-label="Map colour legend"></div>
+              <div class="border-legend" id="border-legend" style="display:none;"></div>
+            </div>
+
+            <!-- Country detail -->
+            <div class="dash-card" style="margin-top:var(--space-4);">
+              <div class="country-detail" id="country-detail">
+                <div class="country-detail-title">
+                  <span id="detail-name">—</span>
+                  <button id="detail-close" aria-label="Close detail panel" style="color:var(--color-text-muted);">
+                    <i data-lucide="x" width="16" height="16"></i>
+                  </button>
+                </div>
+                <div class="detail-grid">
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-rank">—</div><div class="detail-stat-lbl">Selected rank</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-medals">—</div><div class="detail-stat-lbl">Total medals</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-percap">—</div><div class="detail-stat-lbl">Medals / million</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-pop">—</div><div class="detail-stat-lbl">Population (000s)</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-gdp">—</div><div class="detail-stat-lbl">GDP per capita</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-life">—</div><div class="detail-stat-lbl">Life expectancy</div></div>
+                  <div class="detail-stat"><div class="detail-stat-val" id="d-postpermil">—</div><div class="detail-stat-lbl">Post. median rate</div></div>
+                </div>
+              </div>
+              <div id="detail-empty" style="padding:var(--space-5);font-size:var(--text-sm);color:var(--color-text-muted);">
+                <i data-lucide="mouse-pointer-click" width="14" height="14" style="display:inline;vertical-align:middle;margin-right:var(--space-2);"></i>
+                Click a country on the map or table to see details.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="./assets/js/theme.js" defer></script>
+  <script src="./assets/js/scroll.js" defer></script>
+  <script src="./assets/js/dashboard.js" defer></script>
+  <script>
+    async function loadComponent(id, url) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { el.innerHTML = await fetch(url).then(r => r.text()); } catch(e) {}
+    }
+    loadComponent('nav-placeholder',    './components/nav.html');
+    loadComponent('footer-placeholder', './components/footer.html');
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+  </script>
+</body>
+</html>
