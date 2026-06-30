@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PhD Research</title>
-  <meta name="description" content="Bayesian Ranking of Olympic Medal Performance — PhD research at University of Galway." />
+  <title>Bayesian Ranking of Olympic Performances</title>
+  <meta name="description" content="Cormac MacDermott, Carl Scarrott, John Ferguson" />
 
   <!--Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
 
   <!-- Lucide icons -->
@@ -30,139 +30,23 @@
       <div class="hero-inner">
         <div class="hero-label">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="4"/></svg>
-          PhD Research · University of Galway
+          Some text...
         </div>
-        <h1>Bayesian Ranking of<br><em>Olympic Medal Performance</em></h1>
-        <p class="hero-desc">A hierarchical Bayesian model for comparing country medal performance across Olympic editions, using generalized extreme value priors.</p>
+        <h1><em>Bayesian Ranking of<br>Olympic Medal Performance</em></h1>
+        <p class="hero-desc">Evaluating a country’s sporting success can provide insight into its decision making and the infrastructure used to develop athletic talent. The Olympic Games
+serve as a global benchmark, yet conventional medal tables can be overly influenced by population size and can be highly variable, particularly for smaller nations where outcomes are more affected by stochastic fluctuations. We propose a Bayesian ranking scheme to rank the performance of National Olympic Committees by inferring an underlying ‘long-run’ medals-to-population ratio from the results of a single Olympic Games. The approach applies shrinkage to stabilise estimates for small-population countries (which are most susceptible to random variation) while leaving large-population countries comparatively unchanged. The Bayesian framework yields posterior distributions over both the inferred medals per-capita performance and the induced ranks, providing a principled measure of uncertainty in each country’s ranking position and highlighting cases where apparent differences between neighbouring
+countries are not credibly distinguishable. These posterior rank summaries give a more stable and interpretable ordering of national sporting performance than point-estimate medal tables, while making uncertainty in comparative performance explicit.</p>
         <div class="hero-actions">
           <a href="./dashboard.html" class="btn btn-primary">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             Open Dashboard
           </a>
           <a href="#research" class="btn btn-ghost">Explore methodology</a>
-        </div>
-        <div class="hero-meta">
-          <div class="hero-stat"><span class="hero-stat-val">32+</span><span class="hero-stat-label">Olympic Games modelled</span></div>
-          <div class="hero-stat"><span class="hero-stat-val">200+</span><span class="hero-stat-label">Countries ranked</span></div>
-          <div class="hero-stat"><span class="hero-stat-val">5</span><span class="hero-stat-label">Ranking methods compared</span></div>
-          <div class="hero-stat"><span class="hero-stat-val">GEV</span><span class="hero-stat-label">Extreme value prior</span></div>
-        </div>
       </div>
     </header>
 
-    <!-- About -->
-    <section id="about">
-      <div class="container">
-        <hr class="divider" style="margin-bottom: clamp(2.5rem,5vw,4rem);">
-        <div class="about-grid reveal">
-          <div class="about-content">
-            <p class="section-label">About</p>
-            <h2 class="section-title">Statistics, Bayes,<br>and the Olympic podium</h2>
-            <p>I'm a PhD candidate in Statistics at the University of Galway, specialising in extreme value theory, Bayesian hierarchical modelling, and the analysis of rare events.</p>
-            <p>Away from the desk, I compete for University of Galway Athletics — which keeps me empirically grounded in athletic performance data.</p>
-            <div class="skills-list">
-              <span class="skill-badge">Bayesian inference</span>
-              <span class="skill-badge">Extreme value theory</span>
-              <span class="skill-badge">Stan / cmdstanr</span>
-              <span class="skill-badge">GEV models</span>
-              <span class="skill-badge">Hierarchical models</span>
-              <span class="skill-badge">R</span>
-              <span class="skill-badge">Sports analytics</span>
-              <span class="skill-badge">DEA</span>
-            </div>
-          </div>
-          <div class="about-aside">
-            <h3>Quick info</h3>
-            <div class="info-row"><span class="label">Institution</span><span class="value">University of Galway</span></div>
-            <div class="info-row"><span class="label">Degree</span><span class="value">PhD Statistics</span></div>
-            <div class="info-row"><span class="label">Focus</span><span class="value">Extreme value · Bayesian</span></div>
-            <div class="info-row"><span class="label">Track events</span><span class="value">1500m · 3000m · 5000m</span></div>
-            <div class="info-row"><span class="label">Captain</span><span class="value">UG Athletics Club</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Research -->
-    <section id="research" style="background: var(--color-surface);">
-      <div class="container reveal">
-        <p class="section-label">Research</p>
-        <h2 class="section-title">Ranking methods compared</h2>
-        <p class="section-body">Five ranking systems are computed and visualised in the dashboard. Each captures a different notion of Olympic "success".</p>
-        <div class="research-grid">
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="trending-up" width="18" height="18"></i></div>
-            <h3>Posterior Mean Rank</h3>
-            <p>Expected value of the posterior rank distribution from the Bayesian hierarchical model. Accounts for uncertainty via partial pooling across nations.</p>
-          </div>
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="layers" width="18" height="18"></i></div>
-            <h3>Posterior Median Rank</h3>
-            <p>Median of the posterior rank distribution — more robust than the mean to tail behaviour in the GEV prior. Useful for nations at the extremes.</p>
-            <span class="research-card-tag">GEV · Bayesian</span>
-          </div>
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="bar-chart-2" width="18" height="18"></i></div>
-            <h3>U-Index (DEA)</h3>
-            <p>A data envelopment analysis composite rank assessing medal efficiency relative to peer groups. Robust to outliers and covariate imbalance.</p>
-            <span class="research-card-tag">Non-parametric · DEA</span>
-          </div>
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="users" width="18" height="18"></i></div>
-            <h3>Per-capita Rank</h3>
-            <p>Normalises total medals by population (per million), giving small nations — Jamaica, New Zealand, Norway — proper recognition.</p>
-            <span class="research-card-tag">Normalisation</span>
-          </div>
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="globe" width="18" height="18"></i></div>
-            <h3>Total Medal Rank</h3>
-            <p>The baseline raw medal count, ordered descending — provided to illustrate where Bayesian adjustment shifts perceptions most.</p>
-            <span class="research-card-tag">Baseline</span>
-          </div>
-          <div class="research-card">
-            <div class="research-card-icon"><i data-lucide="activity" width="18" height="18"></i></div>
-            <h3>Covariates</h3>
-            <p>Hierarchical priors incorporate population, GDP per capita, and life expectancy (World Bank / WDI). Partial pooling across Games editions.</p>
-            <span class="research-card-tag">WDI · World Bank</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- Publications -->
-    <section id="publications">
-      <div class="container reveal">
-        <p class="section-label">Publications & Writing</p>
-        <h2 class="section-title">Research output</h2>
-        <p class="section-body">Papers in preparation and under review. Part of a multi-paper PhD thesis at University of Galway.</p>
-        <div class="pub-list">
-          <div class="pub-item">
-            <div class="pub-year">2025</div>
-            <div>
-              <div class="pub-title">Bayesian Hierarchical Ranking of Nations at the Olympic Games Using Generalized Extreme Value Priors</div>
-              <div class="pub-authors">Author, J. Murphy, C. Walsh, N. Roantree, P. [et al.]</div>
-              <div class="pub-journal">The American Statistician<span class="pub-status status-review">Under review</span></div>
-            </div>
-          </div>
-          <div class="pub-item">
-            <div class="pub-year">2025</div>
-            <div>
-              <div class="pub-title">Comparing Parametric and Non-parametric Extreme Value Estimation for Olympic Medal Modelling</div>
-              <div class="pub-authors">Author, J. Murphy, C. Walsh</div>
-              <div class="pub-journal">In preparation<span class="pub-status status-prep">In prep.</span></div>
-            </div>
-          </div>
-          <div class="pub-item">
-            <div class="pub-year">2024</div>
-            <div>
-              <div class="pub-title">Uncertainty Quantification in Composite Ranking Methods: A Simulation Study</div>
-              <div class="pub-authors">Author, J. Murphy</div>
-              <div class="pub-journal">Working paper<span class="pub-status status-prep">Working paper</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    
+  
 
     <!-- Contact -->
     <section id="contact" style="background: var(--color-surface);">
@@ -171,7 +55,7 @@
           <div>
             <p class="section-label">Contact</p>
             <h2 class="section-title">Get in touch</h2>
-            <p class="section-body">Happy to discuss the research, methodology, or potential collaboration.</p>
+            <p class="section-body">Happy to discuss the methodology and results.</p>
             <div class="contact-links">
               <a href="mailto:c.macdermott5@universityofgalway.ie" class="contact-link">
                 <i data-lucide="mail" width="16" height="16"></i>
@@ -179,20 +63,15 @@
               </a>
               <a href="https://github.com/Cormy1" target="_blank" rel="noopener noreferrer" class="contact-link">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
-                GitHub — Cormy1
-              </a>
-              <a href="https://www.universityofgalway.ie" target="_blank" rel="noopener noreferrer" class="contact-link">
-                <i data-lucide="building-2" width="16" height="16"></i>
-                University of Galway — School of Mathematics
+                GitHub
               </a>
             </div>
           </div>
           <div style="background:var(--color-surface-offset);border-radius:var(--radius-xl);padding:var(--space-8);border:1px solid oklch(from var(--color-text) l c h / 0.07);">
             <h3 style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-5);">Also happy to discuss…</h3>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:var(--space-3);">
-              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Collaborative research on sports analytics or ranking methodology</li>
-              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Feedback on the Bayesian hierarchical model or reviewer responses</li>
-              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Distance running and training</li>
+              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Research on sports analytics</li>
+              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Feedback on my work</li>
             </ul>
           </div>
         </div>

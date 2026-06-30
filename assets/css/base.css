@@ -1,29 +1,49 @@
 :root, [data-theme="light"] {
-  --color-bg:               #f7f6f2;
-  --color-surface:          #f9f8f5;
-  --color-surface-2:        #fbfbf9;
-  --color-surface-offset:   #f0ede8;
-  --color-surface-dynamic:  #e8e4de;
-  --color-divider:          #dcd9d5;
-  --color-border:           #d0cdc7;
-  --color-text:             #1e1c17;
-  --color-text-muted:       #6e6d68;
-  --color-text-faint:       #b0afa9;
-  --color-text-inverse:     #f7f6f2;
-  --color-primary:          #01696f;
-  --color-primary-hover:    #0c4e54;
-  --color-primary-light:    #cedcd8;
-  --color-gold:             #c08a00;
-  --color-shadow:           oklch(0.2 0.01 80 / 0.10);
+  /* Surfaces — clean cool-white */
+  --color-bg:               #f4f7f6;
+  --color-surface:          #f9fbfa;
+  --color-surface-2:        #ffffff;
+  --color-surface-offset:   #edf2f0;
+  --color-surface-dynamic:  #e2ebe7;
+  --color-divider:          #d4ddd9;
+  --color-border:           #c6d2ce;
+
+  /* Text */
+  --color-text:             #0f1f1b;
+  --color-text-muted:       #4a6560;
+  --color-text-faint:       #91aaa4;
+  --color-text-inverse:     #f4f7f6;
+
+  /* Primary — Teal Green #009E73 */
+  --color-primary:          #009E73;
+  --color-primary-hover:    #007d5c;
+  --color-primary-active:   #005e44;
+  --color-primary-light:    #d0ede5;
+
+  /* Accent — Cobalt Blue #0072B2 */
+  --color-accent:           #0072B2;
+  --color-accent-hover:     #005a8e;
+  --color-accent-active:    #004470;
+  --color-accent-light:     #cce0ef;
+
+  /* Semantic */
+  --color-gold:             #b07d00;
+  --color-error:            #c0392b;
+  --color-success:          #009E73;
+
+  /* Shadows — cool-tinted */
+  --color-shadow:           oklch(0.25 0.02 170 / 0.10);
   --shadow-sm:              0 1px 3px var(--color-shadow);
   --shadow-md:              0 4px 14px var(--color-shadow);
-  --shadow-lg:              0 12px 36px oklch(0.2 0.01 80 / 0.14);
+  --shadow-lg:              0 12px 36px oklch(0.25 0.02 170 / 0.14);
+  
   --radius-sm:              0.375rem;
   --radius-md:              0.5rem;
   --radius-lg:              0.75rem;
   --radius-xl:              1rem;
   --radius-full:            9999px;
-  --font-display:           'Instrument Serif', Georgia, serif;
+    /* Typography */
+  --font-display: 'Cabinet Grotesk', 'Helvetica Neue', sans-serif;
   --font-body:              'Satoshi', 'Helvetica Neue', sans-serif;
   --text-xs:                clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
   --text-sm:                clamp(0.875rem, 0.8rem  + 0.35vw, 1rem);
@@ -31,7 +51,7 @@
   --text-lg:                clamp(1.125rem, 1rem    + 0.75vw, 1.5rem);
   --text-xl:                clamp(1.5rem,   1.2rem  + 1.25vw, 2.25rem);
   --text-2xl:               clamp(2rem,     1.2rem  + 2.5vw,  3.5rem);
-  --text-hero:              clamp(2.8rem,   1rem    + 5vw,    6rem);
+  --text-hero: clamp(2rem, 0.8rem + 4vw, 4rem);
   --space-1: .25rem;  --space-2: .5rem;   --space-3: .75rem;  --space-4: 1rem;
   --space-5: 1.25rem; --space-6: 1.5rem;  --space-8: 2rem;    --space-10: 2.5rem;
   --space-12: 3rem;   --space-16: 4rem;   --space-20: 5rem;   --space-24: 6rem;
@@ -41,38 +61,54 @@
   --transition:      180ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* ── Dark mode ── */
 [data-theme="dark"] {
-  --color-bg:               #141311;
-  --color-surface:          #1a1917;
-  --color-surface-2:        #1f1e1c;
-  --color-surface-offset:   #222020;
-  --color-surface-dynamic:  #2d2b28;
-  --color-divider:          #2a2824;
-  --color-border:           #363330;
-  --color-text:             #d4d3d0;
-  --color-text-muted:       #7c7b77;
-  --color-text-faint:       #55534f;
-  --color-text-inverse:     #1a1917;
-  --color-primary:          #4fa3ad;
-  --color-primary-hover:    #237c88;
-  --color-primary-light:    #2a3e3f;
+  --color-bg:               #0d1714;
+  --color-surface:          #121e1a;
+  --color-surface-2:        #17251f;
+  --color-surface-offset:   #1a2922;
+  --color-surface-dynamic:  #243530;
+  --color-divider:          #233028;
+  --color-border:           #2e3f38;
+
+  --color-text:             #ccd9d5;
+  --color-text-muted:       #6e9189;
+  --color-text-faint:       #3d5c55;
+  --color-text-inverse:     #0d1714;
+
+  --color-primary:          #00c48f;
+  --color-primary-hover:    #00a376;
+  --color-primary-active:   #007d5c;
+  --color-primary-light:    #0d3028;
+
+  --color-accent:           #4da6d8;
+  --color-accent-hover:     #2b8fbf;
+  --color-accent-active:    #1474a3;
+  --color-accent-light:     #0a2535;
+
   --color-gold:             #e8b84b;
+  --color-error:            #e55a4e;
+  --color-success:          #00c48f;
+
   --color-shadow:           oklch(0 0 0 / 0.35);
   --shadow-sm:              0 1px 3px var(--color-shadow);
   --shadow-md:              0 4px 14px var(--color-shadow);
   --shadow-lg:              0 12px 36px oklch(0 0 0 / 0.45);
 }
 
-@media (prefers-color-scheme: light) {
+
+/* System preference fallback */
+@media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-bg: #f7f6f2; --color-surface: #f9f8f5; --color-surface-2: #fbfbf9;
-    --color-surface-offset: #f0ede8; --color-divider: #dcd9d5; --color-border: #d0cdc7;
-    --color-text: #1e1c17; --color-text-muted: #6e6d68; --color-text-faint: #b0afa9;
-    --color-primary: #01696f; --color-primary-hover: #0c4e54; --color-primary-light: #cedcd8;
-    --color-gold: #c08a00;
-    --shadow-sm: 0 1px 3px oklch(0.2 0.01 80 / 0.10);
-    --shadow-md: 0 4px 14px oklch(0.2 0.01 80 / 0.10);
-    --shadow-lg: 0 12px 36px oklch(0.2 0.01 80 / 0.14);
+    --color-bg: #0d1714; --color-surface: #121e1a; --color-surface-2: #17251f;
+    --color-surface-offset: #1a2922; --color-divider: #233028; --color-border: #2e3f38;
+    --color-text: #ccd9d5; --color-text-muted: #6e9189; --color-text-faint: #3d5c55;
+    --color-primary: #00c48f; --color-primary-hover: #00a376; --color-primary-light: #0d3028;
+    --color-accent: #4da6d8; --color-accent-hover: #2b8fbf; --color-accent-light: #0a2535;
+    --color-gold: #e8b84b;
+    --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.35);
+    --shadow-md: 0 4px 14px oklch(0 0 0 / 0.35);
+    --shadow-lg: 0 12px 36px oklch(0 0 0 / 0.45);
   }
 }
 
