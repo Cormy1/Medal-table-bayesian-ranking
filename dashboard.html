@@ -8,14 +8,12 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
   <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  
-  <!-- alternate for dashboard2.js, comment out above link and script block and uncomment this to swap, also change file load below <script src="https://unpkg.com/globe.gl"></script>-->
 
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -35,21 +33,21 @@
 
         <div class="dash-header reveal">
           <h1 class="section-title">Explore the rankings</h1>
-          <p class="section-body">Select an Olympic Games edition, ranking method, and map covariate. Click any country on the map or table to highlight and compare it.</p>
+          <p class="section-body">Pick an Olympic Games edition and ranking method. Bayesian posterior mean rank is the default (obviously). Click any country on the map or table to highlight it along with countries not significantly different in Bayesian rank. Use the filter slider to compare countries within a similar range of your chosen covariate.</p>
         </div>
 
         <!-- Controls -->
         <div class="dash-controls reveal">
           <div class="control-group">
             <label for="sel-games">Olympic Games</label>
-<select id="sel-games">
-  <option value="paris-2024">Paris 2024</option>
-  <option value="tokyo-2020">Tokyo 2020</option>
-  <option value="rio-2016">Rio 2016</option>
-  <option value="london-2012">London 2012</option>
-  <option value="beijing-2008">Beijing 2008</option>
-  <option value="athens-2004">Athens 2004</option>
-</select>
+            <select id="sel-games">
+              <option value="paris-2024">Paris 2024</option>
+              <option value="tokyo-2020">Tokyo 2020</option>
+              <option value="rio-2016">Rio 2016</option>
+              <option value="london-2012">London 2012</option>
+              <option value="beijing-2008">Beijing 2008</option>
+              <option value="athens-2004">Athens 2004</option>
+            </select>
           </div>
           <div class="control-group">
             <label for="sel-ranking">Ranking method</label>
@@ -69,73 +67,77 @@
               <option value="Rank.dp">U-Index Rank</option>
               <option value="Rank.percap">Per-capita Rank</option>
               <option value="Rank.Total">Total Medals Rank</option>
-              <option value="total_pop_july">Population </option>
-              <option value="NY.GDP.PCAP.KD">GDP per capita</option>
+              <option value="total_pop_july">Population (log filter)</option>
+              <option value="NY.GDP.PCAP.KD">GDP per capita (log filter)</option>
               <option value="life_expectancy_birth">Life Expectancy</option>
             </select>
           </div>
-          <!-- Dual-handle interval filter -->
-<div class="slider-group">
-  <label>Filter interval</label>
-  <div class="dual-range" id="dual-range-wrapper">
-    <div class="track-bg"></div>
-    <div class="track-fill" id="track-fill"></div>
-    <input type="range" id="slider-lo" min="1" max="20" value="1"  step="1" aria-label="Minimum value">
-    <input type="range" id="slider-hi" min="1" max="20" value="20" step="1" aria-label="Maximum value">
-  </div>
-  <div class="slider-range-display" id="slider-display">1 – 20</div>
-</div>
-<button class="btn btn-ghost" id="btn-reset">
-  <i data-lucide="rotate-ccw" width="14" height="14"></i> Reset
-</button>
+
+          <!-- Interval filter -->
+          <div class="slider-group">
+            <label>Filter interval</label>
+            <div class="dual-range" id="dual-range-wrapper">
+              <div class="track-bg"></div>
+              <div class="track-fill" id="track-fill"></div>
+              <input type="range" id="slider-lo" min="1" max="20" value="1"  step="1" aria-label="Minimum value">
+              <input type="range" id="slider-hi" min="1" max="20" value="20" step="1" aria-label="Maximum value">
+            </div>
+            <div class="slider-range-display" id="slider-display">1 – 20</div>
+          </div>
+          <button class="btn btn-ghost" id="btn-reset">
+            <i data-lucide="rotate-ccw" width="14" height="14"></i> Reset
+          </button>
         </div>
 
         <!-- Main layout -->
-        <div class="dash-layout">
+        <div class="dash-layout" id="dash-layout">
 
           <!-- Table -->
           <div class="dash-card">
             <div class="dash-card-header">
               <span class="dash-card-title"><i data-lucide="list-ordered" width="15" height="15"></i> Ranking Table</span>
-              <span id="table-count" style="font-size:var(--text-xs);color:var(--color-text-muted);">Loading…</span>
+              <div style="display:flex;align-items:center;gap:var(--space-3);">
+                <span id="table-count" style="font-size:var(--text-xs);color:var(--color-text-muted);">Loading…</span>
+                <button class="btn btn-ghost" id="btn-map-toggle" style="font-size:var(--text-xs);padding:var(--space-1) var(--space-3);">
+                  <i data-lucide="map" width="14" height="14"></i> Show Map
+                </button>
+              </div>
             </div>
             <div class="search-row">
               <input type="text" class="search-input" id="table-search" placeholder="Search country…" aria-label="Search countries">
             </div>
             <div class="rank-table-wrap">
               <table class="rank-table" aria-label="Olympic country rankings">
-<thead>
-  <tr>
-    <th class="rank-num" data-sort="rank_mean">Rank<span class="sort-arrow"> ↕</span></th>
-    <th></th>
-    <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
-    <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
-    <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
-  </tr>
-</thead>
+                <thead id="ranking-thead">
+                  <tr>
+                    <th class="rank-num" data-sort="rank_mean">Rank<span class="sort-arrow"> ↕</span></th>
+                    <th></th>
+                    <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
+                    <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
+                    <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
+                  </tr>
+                </thead>
                 <tbody id="ranking-tbody">
                   <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-text-muted);">Loading…</td></tr>
                 </tbody>
               </table>
             </div>
-                      <div class="sig-legend" id="sig-legend">
-  <span class="sig-legend-item">
-    <span class="sig-dot sig-dot-sig"></span> Not significantly different Bayesian rank
-  </span>
-  <span class="sig-legend-item">
-    <span class="sig-dot sig-dot-not"></span> Significantly different Bayesian rank (dimmed)
-  </span>
-</div>
+            <div class="sig-legend" id="sig-legend">
+              <span class="sig-legend-item">
+                <span class="sig-dot sig-dot-sig"></span> Not significantly different Bayesian rank
+              </span>
+              <span class="sig-legend-item">
+                <span class="sig-dot sig-dot-not"></span> Significantly different Bayesian rank (dimmed)
+              </span>
+            </div>
           </div>
-          
-
 
           <!-- Map + detail -->
-          <div>
+          <div id="map-panel">
             <div class="dash-card">
               <div class="dash-card-header">
-                <span class="dash-card-title"><i data-lucide="map" width="15" height="15"></i> Rankings</span>
-                <span id="map-subtitle" style="font-size:var(--text-xs);color:var(--color-text-muted);">Tokyo 2020</span>
+                <span class="dash-card-title"><i data-lucide="map" width="15" height="15"></i> Rankings Map</span>
+                <span id="map-subtitle" style="font-size:var(--text-xs);color:var(--color-text-muted);"></span>
               </div>
               <div id="map" role="application" aria-label="Interactive world map of Olympic rankings"></div>
               <div class="map-legend" id="map-legend" aria-label="Map colour legend"></div>

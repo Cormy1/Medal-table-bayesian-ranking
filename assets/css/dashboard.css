@@ -156,6 +156,23 @@
 }
 .dash-card-title i { color: var(--color-primary); }
 
+/* -- Hide map -- */
+
+.dash-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  transition: grid-template-columns 0.35s ease;
+}
+.dash-layout.map-open {
+  grid-template-columns: 320px 1fr;
+}
+#map-panel {
+  display: none;
+}
+#map-panel.visible {
+  display: block;
+}
+
 /* ── Ranking table ── */
 .rank-table-wrap { overflow-y: auto; max-height: 520px; }
 .rank-table {
@@ -275,7 +292,7 @@
 /* Significantly different — stays fully visible, subtle green tint */
 .rank-table tbody tr.row-sig-diff {
   opacity: 1;
-  background-color: oklch(from #22c55e l c h / 0.06);
+  background-color: oklch(from rgba(245,158,11,0.12) l c h / 0.06);
 }
 
 /* Selected row always fully prominent */
@@ -308,5 +325,5 @@
   flex-shrink: 0;
 }
 
-.sig-dot-sig  { background: rgba(245,158,11,0.12); }
+.sig-dot-sig  { background: #f59e0b70; }
 .sig-dot-not  { background: var(--color-text-faint); }

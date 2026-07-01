@@ -64,10 +64,10 @@ const VARIABLE_TRANSFORM = {
 
 /* ── ISO patch for Natural Earth -99 codes ── */
 const NAME_TO_ISO = {
-  'France':    'FRA',
-  'Norway':    'NOR',
-  'Kosovo':    'XKX',
-  'N. Cyprus': 'CYP',
+  'France':     'FRA',
+  'Norway':     'NOR',
+  'Kosovo':     'XKX',
+  'N. Cyprus':  'CYP',
   'Somaliland': null,
 };
 
@@ -85,10 +85,25 @@ let currentVariable = "Rank.Bayes.cond";
 let selectedCountry = null;
 let intervalLo = 1;
 let intervalHi = 200;
+let mapOpen = false;
 
 /* ── Sort state ── */
 let sortKey = null;
 let sortDir = 'asc';
+
+/* ── Map open/close ── */
+function setMapOpen(open) {
+  mapOpen = open;
+  document.getElementById('dash-layout')?.classList.toggle('map-open', open);
+  document.getElementById('map-panel')?.classList.toggle('visible', open);
+  const btn = document.getElementById('btn-map-toggle');
+  if (btn) btn.innerHTML = open
+    ? '<i data-lucide="x" width="14" height="14"></i> Hide Map'
+    : '<i data-lucide="map" width="14" height="14"></i> Show Map';
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+  if (open) setTimeout(() => window._map?.invalidateSize(), 350);
+  renderTable(document.getElementById('table-search')?.value || '');
+}
 
 /* ── Leaflet map ── */
 const map = L.map('map', {
@@ -117,6 +132,7 @@ applyTiles();
 map.on('themechange', () => setTimeout(applyTiles, 50));
 document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => setTimeout(applyTiles, 80));
 
+/* ── Helpers ── */
 function getAllData() {
   return (GAMES_DATA[currentGame] || []).filter(c => c[RANKING_KEY[currentRanking]] != null);
 }
@@ -145,9 +161,7 @@ function formatVal(val, varKey) {
 function initSlider() {
   const vKey      = VARIABLE_KEY[currentVariable];
   const transform = VARIABLE_TRANSFORM[vKey] || 'linear';
-  const vals      = (GAMES_DATA[currentGame] || [])
-    .map(c => c[vKey])
-    .filter(v => v != null);
+  const vals      = (GAMES_DATA[currentGame] || []).map(c => c[vKey]).filter(v => v != null);
   if (!vals.length) return;
   const min = Math.min(...vals), max = Math.max(...vals);
   intervalLo = min; intervalHi = max;
@@ -198,12 +212,10 @@ function getMapStyle(feature, dataByIso, inSet) {
   if (!iso) return { fillColor: '#e2e8f0', fillOpacity: 0.3, color: '#cbd5e1', weight: 0.5 };
 
   const c = dataByIso[iso];
-
   if (!c) return { fillColor: '#d1d5db', fillOpacity: 0.4, color: '#9ca3af', weight: 1 };
 
   const inFilter = inSet.has(iso);
 
-  // No country selected — all neutral grey
   if (!selectedCountry) {
     return {
       fillColor:   inFilter ? '#94a3b8' : '#cbd5e1',
@@ -213,7 +225,6 @@ function getMapStyle(feature, dataByIso, inSet) {
     };
   }
 
-  // Country selected
   const selectedData = dataByIso[selectedCountry];
   const isSelected   = iso === selectedCountry;
   const isNotSig     = selectedData ? selectedData[iso] === true : false;
@@ -221,15 +232,12 @@ function getMapStyle(feature, dataByIso, inSet) {
   if (isSelected) {
     return { fillColor: '#f59e0b', fillOpacity: 0.95, color: '#7b1450', weight: 3 };
   }
-
   if (!inFilter) {
     return { fillColor: '#cbd5e1', fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
   }
-
   if (isNotSig) {
     return { fillColor: '#f59e0b', fillOpacity: 0.22, color: '#d97706', weight: 1.5 };
   }
-
   return { fillColor: '#94a3b8', fillOpacity: 0.55, color: '#64748b', weight: 1 };
 }
 
@@ -247,7 +255,6 @@ function renderMap() {
 
   choroplethLayer = L.geoJSON(worldGeoJSON, {
     style: feature => getMapStyle(feature, dataByIso, inSet),
-
     onEachFeature: (feature, layer) => {
       const iso = resolveIso(feature);
       if (!iso) return;
@@ -298,11 +305,42 @@ function renderMapLegend() {
 
 /* ── Table render ── */
 function renderTable(search = '') {
+  const thead = document.getElementById('ranking-thead');
   const tbody = document.getElementById('ranking-tbody');
   const rKey  = RANKING_KEY[currentRanking];
 
-  const rankTh = document.querySelector('.rank-table th[data-sort^="rank"]');
-  if (rankTh) rankTh.dataset.sort = rKey;
+  // Update thead based on map state
+  if (thead) {
+    if (mapOpen) {
+      thead.innerHTML = `
+        <tr>
+          <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
+          <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
+        </tr>`;
+    } else {
+      thead.innerHTML = `
+        <tr>
+          <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
+          <th></th>
+          <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
+          <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
+          <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
+        </tr>`;
+      // Re-attach sort listeners after rebuilding thead
+      thead.querySelectorAll('th[data-sort]').forEach(th => {
+        th.addEventListener('click', () => {
+          const key = th.dataset.sort;
+          if (sortKey === key) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortKey = key;
+            sortDir = 'asc';
+          }
+          renderTable(document.getElementById('table-search')?.value || '');
+        });
+      });
+    }
+  }
 
   let data = getFilteredData();
   if (search) data = data.filter(c => c.country.toLowerCase().includes(search.toLowerCase()));
@@ -321,16 +359,19 @@ function renderTable(search = '') {
   const countEl = document.getElementById('table-count');
   if (countEl) countEl.textContent = data.length + ' countries';
 
-  document.querySelectorAll('.rank-table th[data-sort]').forEach(th => {
-    const key    = th.dataset.sort;
-    const active = (sortKey === key) || (!sortKey && key === rKey);
-    th.classList.toggle('sort-active', active);
-    const arrow  = th.querySelector('.sort-arrow');
-    if (arrow) arrow.textContent = active ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ' ↕';
-  });
+  // Update sort indicators
+  if (thead) {
+    thead.querySelectorAll('th[data-sort]').forEach(th => {
+      const key    = th.dataset.sort;
+      const active = (sortKey === key) || (!sortKey && key === rKey);
+      th.classList.toggle('sort-active', active);
+      const arrow  = th.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = active ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ' ↕';
+    });
+  }
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${mapOpen ? 2 : 5}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
     return;
   }
 
@@ -344,7 +385,6 @@ function renderTable(search = '') {
 
   tbody.innerHTML = data.map(c => {
     let rowStyle = '';
-
     if (selectedCountry === c.iso_a3) {
       rowStyle = 'background-color:#f59e0b;color:#1c1917;';
     } else if (selectedData) {
@@ -353,6 +393,14 @@ function renderTable(search = '') {
       } else {
         rowStyle = 'opacity:0.4;';
       }
+    }
+
+    if (mapOpen) {
+      return `
+      <tr data-iso="${c.iso_a3}" style="${rowStyle}">
+        <td class="rank-num">${c[rKey] ?? '—'}</td>
+        <td class="country-name">${c.country}</td>
+      </tr>`;
     }
 
     return `
@@ -410,6 +458,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('btn-reset')?.addEventListener('click', () => {
     selectedCountry = null;
     refresh();
+  });
+
+  document.getElementById('btn-map-toggle')?.addEventListener('click', () => {
+    setMapOpen(!mapOpen);
   });
 
   const lo = document.getElementById('slider-lo');
