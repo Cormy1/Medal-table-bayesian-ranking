@@ -173,11 +173,11 @@ function formatVal(val, varKey) {
 
 /* ── Detail row HTML ── */
 function buildDetailHTML(c, colspan) {
-  const pop  = c['population']       != null ? Number(c['population']).toLocaleString()          : '—';
-  const gdp  = c['NY.GDP.PCAP.KD']       != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString()   : '—';
-  const life = c['SP.DYN.LE00.IN']       != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs'      : '—';
-  const post = c['median_estimate_mpm']  != null ? Number(c['median_estimate_mpm']).toFixed(3)           : '—';
-  const mpm  = c['observed_mpm']         != null ? Number(c['observed_mpm']).toFixed(2)                  : '—';
+  const pop  = c['population']      != null ? Number(c['population']).toLocaleString()         : '—';
+  const gdp  = c['NY.GDP.PCAP.KD']      != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString()  : '—';
+  const life = c['SP.DYN.LE00.IN']      != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs'     : '—';
+  const post = c['median_estimate_mpm'] != null ? Number(c['median_estimate_mpm']).toFixed(3)          : '—';
+  const mpm  = c['observed_mpm']        != null ? Number(c['observed_mpm']).toFixed(2)                 : '—';
   const rKey = RANKING_KEY[currentRanking];
 
   return `
@@ -185,13 +185,34 @@ function buildDetailHTML(c, colspan) {
     <td colspan="${colspan}" style="padding:0;">
       <div class="detail-expand">
         <div class="detail-stat-grid">
-          <div class="detail-stat-item"><span class="detail-stat-val">${c[rKey] ?? '—'}</span><span class="detail-stat-lbl">Selected rank</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${c['medal_total'] ?? '—'}</span><span class="detail-stat-lbl">Total medals</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${mpm}</span><span class="detail-stat-lbl">Medals / million</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${pop}</span><span class="detail-stat-lbl">Population</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${gdp}</span><span class="detail-stat-lbl">GDP per capita</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${life}</span><span class="detail-stat-lbl">Life expectancy</span></div>
-          <div class="detail-stat-item"><span class="detail-stat-val">${post}</span><span class="detail-stat-lbl">Post. median rate</span></div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${c[rKey] ?? '—'}</span>
+            <span class="detail-stat-lbl">Selected rank</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${c['medal_total'] ?? '—'}</span>
+            <span class="detail-stat-lbl">Total medals</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${mpm}</span>
+            <span class="detail-stat-lbl">Medals / million</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${pop}</span>
+            <span class="detail-stat-lbl">Population</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${gdp}</span>
+            <span class="detail-stat-lbl">GDP per capita</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${life}</span>
+            <span class="detail-stat-lbl">Life expectancy</span>
+          </div>
+          <div class="detail-stat-item">
+            <span class="detail-stat-val">${post}</span>
+            <span class="detail-stat-lbl">Post. median rate</span>
+          </div>
         </div>
       </div>
     </td>
@@ -202,11 +223,13 @@ function buildDetailHTML(c, colspan) {
 function animateDetailOpen(detailRow) {
   const inner = detailRow.querySelector('.detail-expand');
   if (!inner) return;
-  inner.style.maxHeight = '0';
-  inner.style.overflow  = 'hidden';
+  inner.style.maxHeight  = '0';
+  inner.style.overflow   = 'hidden';
   inner.style.transition = 'max-height 0.32s cubic-bezier(0.16,1,0.3,1)';
   requestAnimationFrame(() => {
-    inner.style.maxHeight = inner.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      inner.style.maxHeight = inner.scrollHeight + 'px';
+    });
   });
 }
 
@@ -327,18 +350,25 @@ function renderMap() {
       const c = dataByIso[iso];
       if (!c) return;
 
-      layer.bindTooltip(
-        `<strong>${c.country}</strong><br>` +
-        `Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>` +
-        `Total medals: ${c['medal_total'] ?? '—'}<br>` +
-        `Per million: ${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}`,
-        { sticky: true }
-      );
-      layer.on({
-        click:     () => selectCountry(iso),
-        mouseover: e => { if (iso !== selectedCountry) e.target.setStyle({ weight: 2.5, color: '#111827' }); },
-        mouseout:  e => { choroplethLayer.resetStyle(e.target); }
-      });
+      if (inSet.has(iso)) {
+        layer.bindTooltip(
+          `<strong>${c.country}</strong><br>` +
+          `Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>` +
+          `Total medals: ${c['medal_total'] ?? '—'}<br>` +
+          `Per million: ${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}`,
+          { sticky: true }
+        );
+        layer.on({
+          click:     () => selectCountry(iso),
+          mouseover: e => { if (iso !== selectedCountry) e.target.setStyle({ weight: 2.5, color: '#111827' }); },
+          mouseout:  e => { choroplethLayer.resetStyle(e.target); }
+        });
+      } else {
+        layer.on({
+          mouseover: () => {},
+          mouseout:  () => {}
+        });
+      }
     }
   }).addTo(map);
 
@@ -374,21 +404,24 @@ function renderMapLegend() {
 
 /* ── Table render ── */
 function renderTable(search = '') {
-  const thead  = document.getElementById('ranking-thead');
-  const tbody  = document.getElementById('ranking-tbody');
-  const rKey   = RANKING_KEY[currentRanking];
-  const colspan = mapOpen ? 2 : 5;
+  const thead   = document.getElementById('ranking-thead');
+  const tbody   = document.getElementById('ranking-tbody');
+  const rKey    = RANKING_KEY[currentRanking];
+  // colspan: full=7 (#, rank, flag, country, total, per-mill), map-open=3 (#, rank, country)
+  const colspan = mapOpen ? 3 : 7;
 
   if (thead) {
     if (mapOpen) {
       thead.innerHTML = `
         <tr>
+          <th class="rank-num sub-rank-th">#</th>
           <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
           <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
         </tr>`;
     } else {
       thead.innerHTML = `
         <tr>
+          <th class="rank-num sub-rank-th">#</th>
           <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
           <th></th>
           <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
@@ -399,9 +432,12 @@ function renderTable(search = '') {
     thead.querySelectorAll('th[data-sort]').forEach(th => {
       th.addEventListener('click', () => {
         const key = th.dataset.sort;
-        sortKey = (sortKey === key) ? key : key;
-        sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
-        sortKey = key;
+        if (sortKey === key) {
+          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        } else {
+          sortKey = key;
+          sortDir = 'asc';
+        }
         renderTable(document.getElementById('table-search')?.value || '');
       });
     });
@@ -448,7 +484,8 @@ function renderTable(search = '') {
   if (sigLegend) sigLegend.classList.toggle('visible', !!selectedCountry);
 
   const rows = [];
-  data.forEach(c => {
+  data.forEach((c, idx) => {
+    const subRank = idx + 1;
     let rowStyle = '';
     if (selectedCountry === c.iso_a3) {
       rowStyle = `background-color:${COL_SELECTED};color:#1c1917;`;
@@ -461,12 +498,14 @@ function renderTable(search = '') {
     if (mapOpen) {
       rows.push(`
         <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+          <td class="rank-num sub-rank-cell">${subRank}</td>
           <td class="rank-num">${c[rKey] ?? '—'}</td>
           <td class="country-name">${c.country}</td>
         </tr>`);
     } else {
       rows.push(`
         <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+          <td class="rank-num sub-rank-cell">${subRank}</td>
           <td class="rank-num">${c[rKey] ?? '—'}</td>
           <td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>
           <td class="country-name">${c.country}</td>
@@ -483,12 +522,12 @@ function renderTable(search = '') {
 
   tbody.innerHTML = rows.join('');
 
-  // Animate the detail row open
+  // Animate detail row open
   const detailRow = tbody.querySelector('.detail-row');
   if (detailRow) animateDetailOpen(detailRow);
 
   // Scroll selected row into view
-  const selRow = tbody.querySelector(`tr[data-iso="${selectedCountry}"]`);
+  const selRow = tbody.querySelector(`tr.country-row[data-iso="${selectedCountry}"]`);
   if (selRow) selRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 
   tbody.querySelectorAll('tr.country-row').forEach(row =>
