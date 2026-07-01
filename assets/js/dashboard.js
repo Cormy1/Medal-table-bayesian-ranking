@@ -91,6 +91,18 @@ let mapOpen = false;
 let sortKey = null;
 let sortDir = 'asc';
 
+/* ── Map colours ── */
+const COL_SELECTED      = '#f59e0b';
+const COL_SELECTED_BDR  = '#7b1450';
+const COL_NOT_SIG_FILL  = '#f59e0b';
+const COL_NOT_SIG_BDR   = '#d97706';
+const COL_HIGHER_FILL   = '#2563eb';
+const COL_HIGHER_BDR    = '#1d4ed8';
+const COL_LOWER_FILL    = '#be185d';
+const COL_LOWER_BDR     = '#9d174d';
+const COL_NO_SEL_FILL   = '#94a3b8';
+const COL_OUT_FILL      = '#cbd5e1';
+
 /* ── Map open/close ── */
 function setMapOpen(open) {
   mapOpen = open;
@@ -134,7 +146,9 @@ document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => s
 
 /* ── Helpers ── */
 function getAllData() {
-  return (GAMES_DATA[currentGame] || []).filter(c => c[RANKING_KEY[currentRanking]] != null);
+  return (GAMES_DATA[currentGame] || []).filter(c =>
+    c[RANKING_KEY[currentRanking]] != null && (c['medal_total'] ?? 0) > 0
+  );
 }
 
 function getFilteredData() {
@@ -157,11 +171,52 @@ function formatVal(val, varKey) {
   return val;
 }
 
+/* ── Detail row HTML ── */
+function buildDetailHTML(c, colspan) {
+  const pop  = c['population']       != null ? Number(c['population']).toLocaleString()          : '—';
+  const gdp  = c['NY.GDP.PCAP.KD']       != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString()   : '—';
+  const life = c['SP.DYN.LE00.IN']       != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs'      : '—';
+  const post = c['median_estimate_mpm']  != null ? Number(c['median_estimate_mpm']).toFixed(3)           : '—';
+  const mpm  = c['observed_mpm']         != null ? Number(c['observed_mpm']).toFixed(2)                  : '—';
+  const rKey = RANKING_KEY[currentRanking];
+
+  return `
+  <tr class="detail-row" data-detail-iso="${c.iso_a3}">
+    <td colspan="${colspan}" style="padding:0;">
+      <div class="detail-expand">
+        <div class="detail-stat-grid">
+          <div class="detail-stat-item"><span class="detail-stat-val">${c[rKey] ?? '—'}</span><span class="detail-stat-lbl">Selected rank</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${c['medal_total'] ?? '—'}</span><span class="detail-stat-lbl">Total medals</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${mpm}</span><span class="detail-stat-lbl">Medals / million</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${pop}</span><span class="detail-stat-lbl">Population</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${gdp}</span><span class="detail-stat-lbl">GDP per capita</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${life}</span><span class="detail-stat-lbl">Life expectancy</span></div>
+          <div class="detail-stat-item"><span class="detail-stat-val">${post}</span><span class="detail-stat-lbl">Post. median rate</span></div>
+        </div>
+      </div>
+    </td>
+  </tr>`;
+}
+
+/* ── Animate detail row open ── */
+function animateDetailOpen(detailRow) {
+  const inner = detailRow.querySelector('.detail-expand');
+  if (!inner) return;
+  inner.style.maxHeight = '0';
+  inner.style.overflow  = 'hidden';
+  inner.style.transition = 'max-height 0.32s cubic-bezier(0.16,1,0.3,1)';
+  requestAnimationFrame(() => {
+    inner.style.maxHeight = inner.scrollHeight + 'px';
+  });
+}
+
 /* ── Slider ── */
 function initSlider() {
   const vKey      = VARIABLE_KEY[currentVariable];
   const transform = VARIABLE_TRANSFORM[vKey] || 'linear';
-  const vals      = (GAMES_DATA[currentGame] || []).map(c => c[vKey]).filter(v => v != null);
+  const vals      = (GAMES_DATA[currentGame] || [])
+    .map(c => c[vKey])
+    .filter(v => v != null && v > 0);
   if (!vals.length) return;
   const min = Math.min(...vals), max = Math.max(...vals);
   intervalLo = min; intervalHi = max;
@@ -207,38 +262,45 @@ function updateSliderFill() {
 /* ── Map render ── */
 let choroplethLayer = null;
 
-function getMapStyle(feature, dataByIso, inSet) {
+function getMapStyle(feature, dataByIso, inSet, selRank) {
   const iso = resolveIso(feature);
   if (!iso) return { fillColor: '#e2e8f0', fillOpacity: 0.3, color: '#cbd5e1', weight: 0.5 };
 
   const c = dataByIso[iso];
-  if (!c) return { fillColor: '#d1d5db', fillOpacity: 0.4, color: '#9ca3af', weight: 1 };
+  if (!c) return { fillColor: '#d1d5db', fillOpacity: 0.35, color: '#9ca3af', weight: 0.8 };
 
   const inFilter = inSet.has(iso);
 
   if (!selectedCountry) {
     return {
-      fillColor:   inFilter ? '#94a3b8' : '#cbd5e1',
+      fillColor:   inFilter ? COL_NO_SEL_FILL : COL_OUT_FILL,
       fillOpacity: inFilter ? 0.75 : 0.35,
       color:       '#64748b',
       weight:      1
     };
   }
 
+  const rKey         = RANKING_KEY[currentRanking];
   const selectedData = dataByIso[selectedCountry];
   const isSelected   = iso === selectedCountry;
   const isNotSig     = selectedData ? selectedData[iso] === true : false;
+  const countryRank  = c[rKey];
 
   if (isSelected) {
-    return { fillColor: '#f59e0b', fillOpacity: 0.95, color: '#7b1450', weight: 3 };
+    return { fillColor: COL_SELECTED, fillOpacity: 0.95, color: COL_SELECTED_BDR, weight: 3 };
   }
   if (!inFilter) {
-    return { fillColor: '#cbd5e1', fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
+    return { fillColor: COL_OUT_FILL, fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
   }
   if (isNotSig) {
-    return { fillColor: '#f59e0b', fillOpacity: 0.22, color: '#d97706', weight: 1.5 };
+    return { fillColor: COL_NOT_SIG_FILL, fillOpacity: 0.22, color: COL_NOT_SIG_BDR, weight: 1.5 };
   }
-  return { fillColor: '#94a3b8', fillOpacity: 0.55, color: '#64748b', weight: 1 };
+  if (selRank != null && countryRank != null) {
+    return countryRank < selRank
+      ? { fillColor: COL_HIGHER_FILL, fillOpacity: 0.55, color: COL_HIGHER_BDR, weight: 1.2 }
+      : { fillColor: COL_LOWER_FILL,  fillOpacity: 0.55, color: COL_LOWER_BDR,  weight: 1.2 };
+  }
+  return { fillColor: COL_NO_SEL_FILL, fillOpacity: 0.55, color: '#64748b', weight: 1 };
 }
 
 function renderMap() {
@@ -253,8 +315,12 @@ function renderMap() {
   const dataByIso = {};
   all.forEach(c => { dataByIso[c.iso_a3] = c; });
 
+  const selRank = selectedCountry
+    ? (dataByIso[selectedCountry]?.[rKey] ?? null)
+    : null;
+
   choroplethLayer = L.geoJSON(worldGeoJSON, {
-    style: feature => getMapStyle(feature, dataByIso, inSet),
+    style: feature => getMapStyle(feature, dataByIso, inSet, selRank),
     onEachFeature: (feature, layer) => {
       const iso = resolveIso(feature);
       if (!iso) return;
@@ -292,24 +358,27 @@ function renderMapLegend() {
   borderEl.style.display = 'flex';
   borderEl.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:#f59e0b;display:inline-block;border:2px solid #7b1450"></span> Selected
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_SELECTED};display:inline-block;border:2px solid ${COL_SELECTED_BDR}"></span> Selected
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid #d97706"></span> Not significantly different
+      <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid ${COL_NOT_SIG_BDR}"></span> Not significantly different
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:#94a3b8;display:inline-block"></span> Significantly different
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_HIGHER_FILL};display:inline-block"></span> Ranked higher
+    </span>
+    <span style="display:inline-flex;align-items:center;gap:5px">
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_LOWER_FILL};display:inline-block"></span> Ranked lower
     </span>
   `;
 }
 
 /* ── Table render ── */
 function renderTable(search = '') {
-  const thead = document.getElementById('ranking-thead');
-  const tbody = document.getElementById('ranking-tbody');
-  const rKey  = RANKING_KEY[currentRanking];
+  const thead  = document.getElementById('ranking-thead');
+  const tbody  = document.getElementById('ranking-tbody');
+  const rKey   = RANKING_KEY[currentRanking];
+  const colspan = mapOpen ? 2 : 5;
 
-  // Update thead based on map state
   if (thead) {
     if (mapOpen) {
       thead.innerHTML = `
@@ -326,20 +395,16 @@ function renderTable(search = '') {
           <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
           <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
         </tr>`;
-      // Re-attach sort listeners after rebuilding thead
-      thead.querySelectorAll('th[data-sort]').forEach(th => {
-        th.addEventListener('click', () => {
-          const key = th.dataset.sort;
-          if (sortKey === key) {
-            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-          } else {
-            sortKey = key;
-            sortDir = 'asc';
-          }
-          renderTable(document.getElementById('table-search')?.value || '');
-        });
-      });
     }
+    thead.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        sortKey = (sortKey === key) ? key : key;
+        sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
+        sortKey = key;
+        renderTable(document.getElementById('table-search')?.value || '');
+      });
+    });
   }
 
   let data = getFilteredData();
@@ -359,7 +424,6 @@ function renderTable(search = '') {
   const countEl = document.getElementById('table-count');
   if (countEl) countEl.textContent = data.length + ' countries';
 
-  // Update sort indicators
   if (thead) {
     thead.querySelectorAll('th[data-sort]').forEach(th => {
       const key    = th.dataset.sort;
@@ -371,7 +435,7 @@ function renderTable(search = '') {
   }
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="${mapOpen ? 2 : 5}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
     return;
   }
 
@@ -383,37 +447,51 @@ function renderTable(search = '') {
   const sigLegend = document.getElementById('sig-legend');
   if (sigLegend) sigLegend.classList.toggle('visible', !!selectedCountry);
 
-  tbody.innerHTML = data.map(c => {
+  const rows = [];
+  data.forEach(c => {
     let rowStyle = '';
     if (selectedCountry === c.iso_a3) {
-      rowStyle = 'background-color:#f59e0b;color:#1c1917;';
+      rowStyle = `background-color:${COL_SELECTED};color:#1c1917;`;
     } else if (selectedData) {
-      if (selectedData[c.iso_a3] === true) {
-        rowStyle = 'background-color:rgba(245,158,11,0.12);';
-      } else {
-        rowStyle = 'opacity:0.4;';
-      }
+      rowStyle = selectedData[c.iso_a3] === true
+        ? 'background-color:rgba(245,158,11,0.12);'
+        : 'opacity:0.4;';
     }
 
     if (mapOpen) {
-      return `
-      <tr data-iso="${c.iso_a3}" style="${rowStyle}">
-        <td class="rank-num">${c[rKey] ?? '—'}</td>
-        <td class="country-name">${c.country}</td>
-      </tr>`;
+      rows.push(`
+        <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+          <td class="rank-num">${c[rKey] ?? '—'}</td>
+          <td class="country-name">${c.country}</td>
+        </tr>`);
+    } else {
+      rows.push(`
+        <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+          <td class="rank-num">${c[rKey] ?? '—'}</td>
+          <td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>
+          <td class="country-name">${c.country}</td>
+          <td class="medal-cell medal-gold">${c['medal_total'] ?? '—'}</td>
+          <td class="medal-cell">${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}</td>
+        </tr>`);
     }
 
-    return `
-    <tr data-iso="${c.iso_a3}" style="${rowStyle}">
-      <td class="rank-num">${c[rKey] ?? '—'}</td>
-      <td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>
-      <td class="country-name">${c.country}</td>
-      <td class="medal-cell medal-gold">${c['medal_total'] ?? '—'}</td>
-      <td class="medal-cell">${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}</td>
-    </tr>`;
-  }).join('');
+    // Inject detail row immediately after selected country
+    if (selectedCountry === c.iso_a3) {
+      rows.push(buildDetailHTML(c, colspan));
+    }
+  });
 
-  tbody.querySelectorAll('tr').forEach(row =>
+  tbody.innerHTML = rows.join('');
+
+  // Animate the detail row open
+  const detailRow = tbody.querySelector('.detail-row');
+  if (detailRow) animateDetailOpen(detailRow);
+
+  // Scroll selected row into view
+  const selRow = tbody.querySelector(`tr[data-iso="${selectedCountry}"]`);
+  if (selRow) selRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+
+  tbody.querySelectorAll('tr.country-row').forEach(row =>
     row.addEventListener('click', () => selectCountry(row.dataset.iso))
   );
 }

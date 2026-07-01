@@ -327,3 +327,38 @@
 
 .sig-dot-sig  { background: #f59e0b70; }
 .sig-dot-not  { background: var(--color-text-faint); }
+
+
+.detail-row td { padding: 0 !important; background: var(--color-surface-offset); }
+
+.detail-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.detail-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.detail-stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.detail-stat-val {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-stat-lbl {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}

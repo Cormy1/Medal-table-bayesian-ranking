@@ -1,6 +1,5 @@
 /* ══════════════════════════════════════════════
    scroll.js — Scroll-reveal IntersectionObserver
-   Shared across all pages
    ══════════════════════════════════════════════ */
 (function () {
   const observer = new IntersectionObserver(

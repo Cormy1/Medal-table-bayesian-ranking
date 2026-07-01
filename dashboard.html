@@ -67,8 +67,8 @@
               <option value="Rank.dp">U-Index Rank</option>
               <option value="Rank.percap">Per-capita Rank</option>
               <option value="Rank.Total">Total Medals Rank</option>
-              <option value="total_pop_july">Population (log filter)</option>
-              <option value="NY.GDP.PCAP.KD">GDP per capita (log filter)</option>
+              <option value="total_pop_july">Population (log)</option>
+              <option value="NY.GDP.PCAP.KD">GDP per capita (log)</option>
               <option value="life_expectancy_birth">Life Expectancy</option>
             </select>
           </div>
@@ -79,10 +79,10 @@
             <div class="dual-range" id="dual-range-wrapper">
               <div class="track-bg"></div>
               <div class="track-fill" id="track-fill"></div>
-              <input type="range" id="slider-lo" min="1" max="20" value="1"  step="1" aria-label="Minimum value">
-              <input type="range" id="slider-hi" min="1" max="20" value="20" step="1" aria-label="Maximum value">
+              <input type="range" id="slider-lo" min="1" max="25" value="1"  step="1" aria-label="Minimum value">
+              <input type="range" id="slider-hi" min="1" max="25" value="25" step="1" aria-label="Maximum value">
             </div>
-            <div class="slider-range-display" id="slider-display">1 – 20</div>
+            <div class="slider-range-display" id="slider-display">1 – 25</div>
           </div>
           <button class="btn btn-ghost" id="btn-reset">
             <i data-lucide="rotate-ccw" width="14" height="14"></i> Reset
@@ -95,7 +95,7 @@
           <!-- Table -->
           <div class="dash-card">
             <div class="dash-card-header">
-              <span class="dash-card-title"><i data-lucide="list-ordered" width="15" height="15"></i> Ranking Table</span>
+              <span class="dash-card-title"><i data-lucide="list-ordered" width="15" height="15"></i>Table</span>
               <div style="display:flex;align-items:center;gap:var(--space-3);">
                 <span id="table-count" style="font-size:var(--text-xs);color:var(--color-text-muted);">Loading…</span>
                 <button class="btn btn-ghost" id="btn-map-toggle" style="font-size:var(--text-xs);padding:var(--space-1) var(--space-3);">
@@ -113,7 +113,7 @@
                     <th class="rank-num" data-sort="rank_mean">Rank<span class="sort-arrow"> ↕</span></th>
                     <th></th>
                     <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
-                    <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
+                    <th style="text-align:right" data-sort="medal_total">Total medals<span class="sort-arrow"> ↕</span></th>
                     <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
                   </tr>
                 </thead>
@@ -124,10 +124,10 @@
             </div>
             <div class="sig-legend" id="sig-legend">
               <span class="sig-legend-item">
-                <span class="sig-dot sig-dot-sig"></span> Not significantly different Bayesian rank
+                <span class="sig-dot sig-dot-sig"></span> Not sig. different Bayesian rank
               </span>
               <span class="sig-legend-item">
-                <span class="sig-dot sig-dot-not"></span> Significantly different Bayesian rank (dimmed)
+                <span class="sig-dot sig-dot-not"></span> Sig. different Bayesian rank (dimmed)
               </span>
             </div>
           </div>
@@ -136,37 +136,12 @@
           <div id="map-panel">
             <div class="dash-card">
               <div class="dash-card-header">
-                <span class="dash-card-title"><i data-lucide="map" width="15" height="15"></i> Rankings Map</span>
+                <span class="dash-card-title"><i data-lucide="map" width="15" height="15"></i> Map</span>
                 <span id="map-subtitle" style="font-size:var(--text-xs);color:var(--color-text-muted);"></span>
               </div>
               <div id="map" role="application" aria-label="Interactive world map of Olympic rankings"></div>
               <div class="map-legend" id="map-legend" aria-label="Map colour legend"></div>
               <div class="border-legend" id="border-legend" style="display:none;"></div>
-            </div>
-
-            <!-- Country detail -->
-            <div class="dash-card" style="margin-top:var(--space-4);">
-              <div class="country-detail" id="country-detail">
-                <div class="country-detail-title">
-                  <span id="detail-name">—</span>
-                  <button id="detail-close" aria-label="Close detail panel" style="color:var(--color-text-muted);">
-                    <i data-lucide="x" width="16" height="16"></i>
-                  </button>
-                </div>
-                <div class="detail-grid">
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-rank">—</div><div class="detail-stat-lbl">Selected rank</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-medals">—</div><div class="detail-stat-lbl">Total medals</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-percap">—</div><div class="detail-stat-lbl">Medals / million</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-pop">—</div><div class="detail-stat-lbl">Population (000s)</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-gdp">—</div><div class="detail-stat-lbl">GDP per capita</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-life">—</div><div class="detail-stat-lbl">Life expectancy</div></div>
-                  <div class="detail-stat"><div class="detail-stat-val" id="d-postpermil">—</div><div class="detail-stat-lbl">Post. median rate</div></div>
-                </div>
-              </div>
-              <div id="detail-empty" style="padding:var(--space-5);font-size:var(--text-sm);color:var(--color-text-muted);">
-                <i data-lucide="mouse-pointer-click" width="14" height="14" style="display:inline;vertical-align:middle;margin-right:var(--space-2);"></i>
-                Click a country on the map or table to see details.
-              </div>
             </div>
           </div>
 
