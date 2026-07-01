@@ -1,6 +1,5 @@
 /* ══════════════════════════════════════════════
-   dashboard.css — Dashboard-only styles
-   Only loaded on dashboard.html
+   dashboard.css
    ══════════════════════════════════════════════ */
 
 #dashboard,
@@ -262,3 +261,52 @@
   padding-bottom: 6px;
   display: inline-block;
 }
+
+
+/* Significantly different — dimmed */
+.rank-table tbody tr.row-not-sig {
+  opacity: 0.3;
+}
+
+.rank-table tbody tr.row-not-sig td {
+  color: var(--color-text-muted);
+}
+
+/* Significantly different — stays fully visible, subtle green tint */
+.rank-table tbody tr.row-sig-diff {
+  opacity: 1;
+  background-color: oklch(from #22c55e l c h / 0.06);
+}
+
+/* Selected row always fully prominent */
+.rank-table tbody tr.row-selected {
+  opacity: 1;
+}
+
+/* Legend pill for significance */
+.sig-legend {
+  display: none;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.sig-legend.visible { display: flex; }
+
+.sig-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.sig-dot {
+  width: 10px; height: 10px;
+  border-radius: var(--radius-full);
+  flex-shrink: 0;
+}
+
+.sig-dot-sig  { background: rgba(245,158,11,0.12); }
+.sig-dot-not  { background: var(--color-text-faint); }

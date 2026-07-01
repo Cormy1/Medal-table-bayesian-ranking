@@ -62,7 +62,7 @@
             </select>
           </div>
           <div class="control-group">
-            <label for="sel-variable">Map colour variable</label>
+            <label for="sel-variable">Filter variable</label>
             <select id="sel-variable">
               <option value="Rank.Bayes.cond">Posterior Mean Rank</option>
               <option value="Rank.Median.Bayes">Posterior Median Rank</option>
@@ -118,7 +118,17 @@
                 </tbody>
               </table>
             </div>
+                      <div class="sig-legend" id="sig-legend">
+  <span class="sig-legend-item">
+    <span class="sig-dot sig-dot-sig"></span> Not significantly different Bayesian rank
+  </span>
+  <span class="sig-legend-item">
+    <span class="sig-dot sig-dot-not"></span> Significantly different Bayesian rank (dimmed)
+  </span>
+</div>
           </div>
+          
+
 
           <!-- Map + detail -->
           <div>
