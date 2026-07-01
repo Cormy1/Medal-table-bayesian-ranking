@@ -388,9 +388,6 @@ function renderMapLegend() {
   borderEl.style.display = 'flex';
   borderEl.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:${COL_SELECTED};display:inline-block;border:2px solid ${COL_SELECTED_BDR}"></span> Selected
-    </span>
-    <span style="display:inline-flex;align-items:center;gap:5px">
       <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid ${COL_NOT_SIG_BDR}"></span> Not significantly different
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
