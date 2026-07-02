@@ -1,6 +1,5 @@
 /* ── Data ── */
 const GAMES_DATA = {};
-
 fetch('./assets/data/app_data.json')
   .then(r => r.json())
   .then(rows => {
@@ -25,22 +24,22 @@ fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geo
 
 /* ── Key maps ── */
 const RANKING_KEY = {
-  "Rank.Bayes.cond":   "rank_mean_beta",
+  "Rank.Bayes.cond": "rank_mean_beta",
   "Rank.Median.Bayes": "rank_median_beta",
-  "Rank.dp":           "rank_dp",
-  "Rank.percap":       "rank_pc",
-  "Rank.Total":        "rank_total"
+  "Rank.dp": "rank_dp",
+  "Rank.percap": "rank_pc",
+  "Rank.Total": "rank_total"
 };
 
 const VARIABLE_KEY = {
-  "Rank.Bayes.cond":       "rank_mean",
-  "Rank.Median.Bayes":     "rank_median",
-  "Rank.dp":               "rank_dp",
-  "Rank.percap":           "rank_pc",
-  "Rank.Total":            "rank_total",
-  "Post_permil":           "median_estimate_mpm",
-  "total_pop_july":        "population",
-  "NY.GDP.PCAP.KD":        "NY.GDP.PCAP.KD",
+  "Rank.Bayes.cond": "rank_mean",
+  "Rank.Median.Bayes": "rank_median",
+  "Rank.dp": "rank_dp",
+  "Rank.percap": "rank_pc",
+  "Rank.Total": "rank_total",
+  "Post_permil": "median_estimate_mpm",
+  "total_pop_july": "population",
+  "NY.GDP.PCAP.KD": "NY.GDP.PCAP.KD",
   "life_expectancy_birth": "SP.DYN.LE00.IN"
 };
 
@@ -50,27 +49,22 @@ const VARIABLE_IS_RANK = new Set([
 
 /* ── Variable transform config ── */
 const VARIABLE_TRANSFORM = {
-  "population":          "log",
-  "NY.GDP.PCAP.KD":      "log",
-  "rank_mean":           "linear",
-  "rank_median":         "linear",
-  "rank_dp":             "linear",
-  "rank_pc":             "linear",
-  "rank_total":          "linear",
+  "population": "log",
+  "NY.GDP.PCAP.KD": "log",
+  "rank_mean": "linear",
+  "rank_median": "linear",
+  "rank_dp": "linear",
+  "rank_pc": "linear",
+  "rank_total": "linear",
   "median_estimate_mpm": "linear",
-  "observed_mpm":        "linear",
-  "SP.DYN.LE00.IN":      "linear"
+  "observed_mpm": "linear",
+  "SP.DYN.LE00.IN": "linear"
 };
 
 /* ── ISO patch for Natural Earth -99 codes ── */
 const NAME_TO_ISO = {
-  'France':     'FRA',
-  'Norway':     'NOR',
-  'Kosovo':     'XKX',
-  'N. Cyprus':  'CYP',
-  'Somaliland': null,
+  'France': 'FRA', 'Norway': 'NOR', 'Kosovo': 'XKX', 'N. Cyprus': 'CYP', 'Somaliland': null,
 };
-
 function resolveIso(feature) {
   const iso = feature.properties.ISO_A3 || feature.properties.iso_a3 || '';
   if (iso !== '-99') return iso;
@@ -79,8 +73,8 @@ function resolveIso(feature) {
 }
 
 /* ── State ── */
-let currentGame     = "paris-2024";
-let currentRanking  = "Rank.Bayes.cond";
+let currentGame = "paris-2024";
+let currentRanking = "Rank.Bayes.cond";
 let currentVariable = "Rank.Bayes.cond";
 let selectedCountry = null;
 let intervalLo = 1;
@@ -92,16 +86,16 @@ let sortKey = null;
 let sortDir = 'asc';
 
 /* ── Map colours ── */
-const COL_SELECTED      = '#f59e0b';
-const COL_SELECTED_BDR  = '#7b1450';
-const COL_NOT_SIG_FILL  = '#f59e0b';
-const COL_NOT_SIG_BDR   = '#d97706';
-const COL_HIGHER_FILL   = '#2563eb';
-const COL_HIGHER_BDR    = '#1d4ed8';
-const COL_LOWER_FILL    = '#be185d';
-const COL_LOWER_BDR     = '#9d174d';
-const COL_NO_SEL_FILL   = '#94a3b8';
-const COL_OUT_FILL      = '#cbd5e1';
+const COL_SELECTED = '#f59e0b';
+const COL_SELECTED_BDR = '#7b1450';
+const COL_NOT_SIG_FILL = '#f59e0b';
+const COL_NOT_SIG_BDR = '#d97706';
+const COL_HIGHER_FILL = '#2563eb';
+const COL_HIGHER_BDR = '#1d4ed8';
+const COL_LOWER_FILL = '#be185d';
+const COL_LOWER_BDR = '#9d174d';
+const COL_NO_SEL_FILL = '#94a3b8';
+const COL_OUT_FILL = '#cbd5e1';
 
 /* ── Map open/close ── */
 function setMapOpen(open) {
@@ -127,8 +121,8 @@ const map = L.map('map', {
   bounceAtZoomLimits: true,
 }).setView([20, 10], 2);
 window._map = map;
-let tileLayer;
 
+let tileLayer;
 function applyTiles() {
   if (tileLayer) map.removeLayer(tileLayer);
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
@@ -136,10 +130,9 @@ function applyTiles() {
     dark
       ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
       : 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
-    { attribution: '© CARTO © OSM', subdomains: 'abcd', maxZoom: 19 }
+    { attribution: '&copy; CARTO &copy; OSM', subdomains: 'abcd', maxZoom: 19 }
   ).addTo(map);
 }
-
 applyTiles();
 map.on('themechange', () => setTimeout(applyTiles, 50));
 document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => setTimeout(applyTiles, 80));
@@ -164,92 +157,105 @@ function getFilteredData() {
 
 function formatVal(val, varKey) {
   if (val == null) return '—';
-  if (varKey === "population")          return Number(val).toLocaleString();
-  if (varKey === "NY.GDP.PCAP.KD")      return "$" + Number(val).toLocaleString();
-  if (varKey === "SP.DYN.LE00.IN")      return Number(val).toFixed(1) + " yrs";
+  if (varKey === "population") return Number(val).toLocaleString();
+  if (varKey === "NY.GDP.PCAP.KD") return "$" + Number(val).toLocaleString();
+  if (varKey === "SP.DYN.LE00.IN") return Number(val).toFixed(1) + " yrs";
   if (varKey === "median_estimate_mpm") return Number(val).toFixed(3);
   return val;
 }
 
-/* ── Detail row HTML ── */
-function buildDetailHTML(c, colspan) {
-  const pop  = c['population']      != null ? Number(c['population']).toLocaleString()         : '—';
-  const gdp  = c['NY.GDP.PCAP.KD']      != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString()  : '—';
-  const life = c['SP.DYN.LE00.IN']      != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs'     : '—';
-  const post = c['median_estimate_mpm'] != null ? Number(c['median_estimate_mpm']).toFixed(3)          : '—';
-  const mpm  = c['observed_mpm']        != null ? Number(c['observed_mpm']).toFixed(2)                 : '—';
-  const rKey = RANKING_KEY[currentRanking];
+/* ── Credible interval helper ── */
+function fmtCI(c) {
+  if (c.rank_credlow == null || c.rank_credhigh == null) return '—';
+  return `${Math.round(c.rank_credlow)}\u2013${Math.round(c.rank_credhigh)}`;
+}
 
-  return `
-  <tr class="detail-row" data-detail-iso="${c.iso_a3}">
-    <td colspan="${colspan}" style="padding:0;">
+/* ── Detail stat grid (shared) ── */
+function buildDetailStatGrid(c) {
+  const pop = c['population'] != null ? Number(c['population']).toLocaleString() : '—';
+  const gdp = c['NY.GDP.PCAP.KD'] != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString() : '—';
+  const life = c['SP.DYN.LE00.IN'] != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs' : '—';
+  const post = c['median_estimate_mpm'] != null ? Number(c['median_estimate_mpm']).toFixed(3) : '—';
+  const mpm = c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—';
+  const rKey = RANKING_KEY[currentRanking];
+  return `<div class="detail-stat-grid">
+    <div class="detail-stat-item"><span class="detail-stat-val">${c[rKey] ?? '—'}</span><span class="detail-stat-lbl">Selected rank</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${c.medal_total ?? '—'}</span><span class="detail-stat-lbl">Total medals</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${mpm}</span><span class="detail-stat-lbl">Medals / million</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${pop}</span><span class="detail-stat-lbl">Population</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${gdp}</span><span class="detail-stat-lbl">GDP per capita</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${life}</span><span class="detail-stat-lbl">Life expectancy</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${post}</span><span class="detail-stat-lbl">Post. median rate</span></div>
+  </div>`;
+}
+
+/* ── Detail row HTML (full table mode, inline in table) ── */
+function buildDetailHTML(c, colspan) {
+  return `<tr class="detail-row" data-detail-iso="${c.iso_a3}">
+    <td colspan="${colspan}" style="padding:0">
       <div class="detail-expand">
-        <div class="detail-stat-grid">
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${c[rKey] ?? '—'}</span>
-            <span class="detail-stat-lbl">Selected rank</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${c['medal_total'] ?? '—'}</span>
-            <span class="detail-stat-lbl">Total medals</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${mpm}</span>
-            <span class="detail-stat-lbl">Medals / million</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${pop}</span>
-            <span class="detail-stat-lbl">Population</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${gdp}</span>
-            <span class="detail-stat-lbl">GDP per capita</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${life}</span>
-            <span class="detail-stat-lbl">Life expectancy</span>
-          </div>
-          <div class="detail-stat-item">
-            <span class="detail-stat-val">${post}</span>
-            <span class="detail-stat-lbl">Post. median rate</span>
-          </div>
-        </div>
+        ${buildDetailStatGrid(c)}
       </div>
     </td>
   </tr>`;
+}
+
+/* ── Detail panel HTML (map-expanded mode, below map) ── */
+function buildDetailPanelHTML(c) {
+  return `<div class="detail-expand-panel">
+    <div class="detail-panel-header">
+      <img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'">
+      <span class="detail-panel-title">${c.country}</span>
+    </div>
+    ${buildDetailStatGrid(c)}
+  </div>`;
+}
+
+/* ── Render detail panel below map ── */
+function renderMapDetailPanel() {
+  const panel = document.getElementById('map-detail-panel');
+  if (!panel) return;
+  if (!selectedCountry) {
+    panel.innerHTML = '';
+    panel.classList.remove('visible');
+    return;
+  }
+  const all = GAMES_DATA[currentGame] || [];
+  const c = all.find(r => r.iso_a3 === selectedCountry);
+  if (!c) {
+    panel.innerHTML = '';
+    panel.classList.remove('visible');
+    return;
+  }
+  panel.innerHTML = buildDetailPanelHTML(c);
+  panel.classList.add('visible');
 }
 
 /* ── Animate detail row open ── */
 function animateDetailOpen(detailRow) {
   const inner = detailRow.querySelector('.detail-expand');
   if (!inner) return;
-  inner.style.maxHeight  = '0';
-  inner.style.overflow   = 'hidden';
+  inner.style.maxHeight = '0';
+  inner.style.overflow = 'hidden';
   inner.style.transition = 'max-height 0.32s cubic-bezier(0.16,1,0.3,1)';
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      inner.style.maxHeight = inner.scrollHeight + 'px';
-    });
-  });
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    inner.style.maxHeight = inner.scrollHeight + 'px';
+  }));
 }
 
 /* ── Slider ── */
 function initSlider() {
-  const vKey      = VARIABLE_KEY[currentVariable];
+  const vKey = VARIABLE_KEY[currentVariable];
   const transform = VARIABLE_TRANSFORM[vKey] || 'linear';
-  const vals      = (GAMES_DATA[currentGame] || [])
-    .map(c => c[vKey])
-    .filter(v => v != null && v > 0);
+  const vals = (GAMES_DATA[currentGame] || []).map(c => c[vKey]).filter(v => v != null && v > 0);
   if (!vals.length) return;
   const min = Math.min(...vals), max = Math.max(...vals);
   intervalLo = min; intervalHi = max;
-
   const lo = document.getElementById('slider-lo');
   const hi = document.getElementById('slider-hi');
-
   if (transform === 'log' && min > 0) {
     const logMin = Math.log10(min), logMax = Math.log10(max);
-    const step   = (logMax - logMin) / 100;
+    const step = (logMax - logMin) / 100;
     if (lo) { lo.min = logMin; lo.max = logMax; lo.value = logMin; lo.step = step; lo.dataset.transform = 'log'; }
     if (hi) { hi.min = logMin; hi.max = logMax; hi.value = logMax; hi.step = step; hi.dataset.transform = 'log'; }
   } else {
@@ -262,23 +268,22 @@ function initSlider() {
 }
 
 function updateSliderDisplay() {
-  const el   = document.getElementById('slider-display');
+  const el = document.getElementById('slider-display');
   const vKey = VARIABLE_KEY[currentVariable];
-  if (el) el.textContent = formatVal(Math.round(intervalLo), vKey) + ' – ' + formatVal(Math.round(intervalHi), vKey);
+  if (el) el.textContent = `${formatVal(Math.round(intervalLo), vKey)} – ${formatVal(Math.round(intervalHi), vKey)}`;
   updateSliderFill();
 }
 
 function updateSliderFill() {
-  const lo   = document.getElementById('slider-lo');
-  const hi   = document.getElementById('slider-hi');
+  const lo = document.getElementById('slider-lo');
+  const hi = document.getElementById('slider-hi');
   const fill = document.getElementById('track-fill');
   if (!lo || !hi || !fill) return;
-  const min   = parseFloat(lo.min);
-  const max   = parseFloat(lo.max);
-  const range = max - min || 1;
-  const left  = ((parseFloat(lo.value) - min) / range) * 100;
+  const min = parseFloat(lo.min), max = parseFloat(lo.max);
+  const range = (max - min) || 1;
+  const left = ((parseFloat(lo.value) - min) / range) * 100;
   const right = ((parseFloat(hi.value) - min) / range) * 100;
-  fill.style.left  = left + '%';
+  fill.style.left = left + '%';
   fill.style.width = (right - left) + '%';
 }
 
@@ -288,59 +293,44 @@ let choroplethLayer = null;
 function getMapStyle(feature, dataByIso, inSet, selRank) {
   const iso = resolveIso(feature);
   if (!iso) return { fillColor: '#e2e8f0', fillOpacity: 0.3, color: '#cbd5e1', weight: 0.5 };
-
   const c = dataByIso[iso];
   if (!c) return { fillColor: '#d1d5db', fillOpacity: 0.35, color: '#9ca3af', weight: 0.8 };
-
   const inFilter = inSet.has(iso);
-
   if (!selectedCountry) {
     return {
-      fillColor:   inFilter ? COL_NO_SEL_FILL : COL_OUT_FILL,
+      fillColor: inFilter ? COL_NO_SEL_FILL : COL_OUT_FILL,
       fillOpacity: inFilter ? 0.75 : 0.35,
-      color:       '#64748b',
-      weight:      1
+      color: '#64748b', weight: 1
     };
   }
-
-  const rKey         = RANKING_KEY[currentRanking];
+  const rKey = RANKING_KEY[currentRanking];
   const selectedData = dataByIso[selectedCountry];
-  const isSelected   = iso === selectedCountry;
-  const isNotSig     = selectedData ? selectedData[iso] === true : false;
-  const countryRank  = c[rKey];
-
-  if (isSelected) {
-    return { fillColor: COL_SELECTED, fillOpacity: 0.95, color: COL_SELECTED_BDR, weight: 3 };
-  }
-  if (!inFilter) {
-    return { fillColor: COL_OUT_FILL, fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
-  }
-  if (isNotSig) {
-    return { fillColor: COL_NOT_SIG_FILL, fillOpacity: 0.22, color: COL_NOT_SIG_BDR, weight: 1.5 };
-  }
+  const isSelected = iso === selectedCountry;
+  const isNotSig = selectedData ? (selectedData[iso] === true) : false;
+  const countryRank = c[rKey];
+  if (isSelected) return { fillColor: COL_SELECTED, fillOpacity: 0.95, color: COL_SELECTED_BDR, weight: 3 };
+  if (!inFilter) return { fillColor: COL_OUT_FILL, fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
+  if (isNotSig) return { fillColor: COL_NOT_SIG_FILL, fillOpacity: 0.22, color: COL_NOT_SIG_BDR, weight: 1.5 };
   if (selRank != null && countryRank != null) {
     return countryRank < selRank
       ? { fillColor: COL_HIGHER_FILL, fillOpacity: 0.55, color: COL_HIGHER_BDR, weight: 1.2 }
-      : { fillColor: COL_LOWER_FILL,  fillOpacity: 0.55, color: COL_LOWER_BDR,  weight: 1.2 };
+      : { fillColor: COL_LOWER_FILL, fillOpacity: 0.55, color: COL_LOWER_BDR, weight: 1.2 };
   }
   return { fillColor: COL_NO_SEL_FILL, fillOpacity: 0.55, color: '#64748b', weight: 1 };
 }
 
 function renderMap() {
-  if (choroplethLayer) { map.removeLayer(choroplethLayer); choroplethLayer = null; }
+  if (choroplethLayer) map.removeLayer(choroplethLayer);
+  choroplethLayer = null;
   if (!worldGeoJSON) return;
 
-  const all      = GAMES_DATA[currentGame] || [];
+  const all = GAMES_DATA[currentGame] || [];
   const filtered = getFilteredData();
-  const inSet    = new Set(filtered.map(c => c.iso_a3));
-  const rKey     = RANKING_KEY[currentRanking];
-
+  const inSet = new Set(filtered.map(c => c.iso_a3));
+  const rKey = RANKING_KEY[currentRanking];
   const dataByIso = {};
-  all.forEach(c => { dataByIso[c.iso_a3] = c; });
-
-  const selRank = selectedCountry
-    ? (dataByIso[selectedCountry]?.[rKey] ?? null)
-    : null;
+  all.forEach(c => dataByIso[c.iso_a3] = c);
+  const selRank = selectedCountry ? (dataByIso[selectedCountry]?.[rKey] ?? null) : null;
 
   choroplethLayer = L.geoJSON(worldGeoJSON, {
     style: feature => getMapStyle(feature, dataByIso, inSet, selRank),
@@ -349,25 +339,18 @@ function renderMap() {
       if (!iso) return;
       const c = dataByIso[iso];
       if (!c) return;
-
       if (inSet.has(iso)) {
         layer.bindTooltip(
-          `<strong>${c.country}</strong><br>` +
-          `Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>` +
-          `Total medals: ${c['medal_total'] ?? '—'}<br>` +
-          `Per million: ${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}`,
+          `<strong>${c.country}</strong><br>Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>Total medals: ${c.medal_total ?? '—'}<br>Per million: ${c.observed_mpm != null ? Number(c.observed_mpm).toFixed(2) : '—'}`,
           { sticky: true }
         );
         layer.on({
-          click:     () => selectCountry(iso),
+          click: () => selectCountry(iso),
           mouseover: e => { if (iso !== selectedCountry) e.target.setStyle({ weight: 2.5, color: '#111827' }); },
-          mouseout:  e => { choroplethLayer.resetStyle(e.target); }
+          mouseout: e => choroplethLayer.resetStyle(e.target)
         });
       } else {
-        layer.on({
-          mouseover: () => {},
-          mouseout:  () => {}
-        });
+        layer.on({ mouseover: () => {}, mouseout: () => {} });
       }
     }
   }).addTo(map);
@@ -379,12 +362,9 @@ function renderMap() {
 function renderMapLegend() {
   const el = document.getElementById('map-legend');
   if (el) el.innerHTML = '';
-
   const borderEl = document.getElementById('border-legend');
   if (!borderEl) return;
-
   if (!selectedCountry) { borderEl.style.display = 'none'; return; }
-
   borderEl.style.display = 'flex';
   borderEl.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:5px">
@@ -400,49 +380,57 @@ function renderMapLegend() {
 }
 
 /* ── Table render ── */
-function renderTable(search = '') {
-  const thead   = document.getElementById('ranking-thead');
-  const tbody   = document.getElementById('ranking-tbody');
-  const rKey    = RANKING_KEY[currentRanking];
-  // colspan: full=7 (#, rank, flag, country, total, per-mill), map-open=3 (#, rank, country)
-  const colspan = mapOpen ? 3 : 7;
+function renderTable(search) {
+  const thead = document.getElementById('ranking-thead');
+  const tbody = document.getElementById('ranking-tbody');
+  const rKey = RANKING_KEY[currentRanking];
+  const isBayesRank = currentRanking === 'Rank.Bayes.cond' || currentRanking === 'Rank.Median.Bayes';
 
+  const colspan = mapOpen ? 5 : (isBayesRank ? 8 : 9);
+
+  /* ── Header ── */
   if (thead) {
     if (mapOpen) {
-      thead.innerHTML = `
-        <tr>
-          <th class="rank-num sub-rank-th">#</th>
-          <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
-          <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
-        </tr>`;
+      thead.innerHTML = `<tr>
+        <th class="rank-num"><sub>#</sub></th>
+        <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"></span></th>
+        <th data-sort="country">Country<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="population">Pop. (M)<span class="sort-arrow"></span></th>
+      </tr>`;
     } else {
-      thead.innerHTML = `
-        <tr>
-          <th class="rank-num sub-rank-th">#</th>
-          <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"> ↕</span></th>
-          <th></th>
-          <th data-sort="country">Country<span class="sort-arrow"> ↕</span></th>
-          <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"> ↕</span></th>
-          <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"> ↕</span></th>
-        </tr>`;
+      thead.innerHTML = `<tr>
+        <th class="rank-num"><sub>#</sub></th>
+        <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"></span></th>
+        <th></th>
+        <th data-sort="country">Country<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="population">Population<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"></span></th>
+        <th style="text-align:right" data-sort="medals.multi.winners">Multi<span class="sort-arrow"></span></th>
+        ${!isBayesRank ? `<th style="text-align:right" data-sort="rank_mean_beta">Bayes Mean Rank<span class="sort-arrow"></span></th>` : ``}
+      </tr>`;
     }
     thead.querySelectorAll('th[data-sort]').forEach(th => {
       th.addEventListener('click', () => {
         const key = th.dataset.sort;
-        if (sortKey === key) {
-          sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-        } else {
-          sortKey = key;
-          sortDir = 'asc';
-        }
-        renderTable(document.getElementById('table-search')?.value || '');
+        if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortKey = key; sortDir = 'asc'; }
+        renderTable(document.getElementById('table-search')?.value);
       });
+    });
+    thead.querySelectorAll('th[data-sort]').forEach(th => {
+      const key = th.dataset.sort;
+      const active = sortKey ? sortKey === key : key === rKey;
+      th.classList.toggle('sort-active', active);
+      const arrow = th.querySelector('.sort-arrow');
+      if (arrow) arrow.textContent = active ? (sortDir === 'asc' ? '▲' : '▼') : '';
     });
   }
 
+  /* ── Data ── */
   let data = getFilteredData();
   if (search) data = data.filter(c => c.country.toLowerCase().includes(search.toLowerCase()));
-
   if (sortKey) {
     data = [...data].sort((a, b) => {
       const av = a[sortKey], bv = b[sortKey];
@@ -455,95 +443,100 @@ function renderTable(search = '') {
   }
 
   const countEl = document.getElementById('table-count');
-  if (countEl) countEl.textContent = data.length + ' countries';
-
-  if (thead) {
-    thead.querySelectorAll('th[data-sort]').forEach(th => {
-      const key    = th.dataset.sort;
-      const active = (sortKey === key) || (!sortKey && key === rKey);
-      th.classList.toggle('sort-active', active);
-      const arrow  = th.querySelector('.sort-arrow');
-      if (arrow) arrow.textContent = active ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ' ↕';
-    });
-  }
+  if (countEl) countEl.textContent = `${data.length} countries`;
 
   if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
     return;
   }
 
-  const all          = GAMES_DATA[currentGame] || [];
-  const selectedData = selectedCountry
-    ? (all.find(r => r.iso_a3 === selectedCountry) || null)
-    : null;
+  const all = GAMES_DATA[currentGame] || [];
+  const selectedData = selectedCountry ? (all.find(r => r.iso_a3 === selectedCountry) ?? null) : null;
 
-  const sigLegend = document.getElementById('sig-legend');
-  if (sigLegend) sigLegend.classList.toggle('visible', !!selectedCountry);
-
-  const rows = [];
-  data.forEach((c, idx) => {
+  const rows = data.map((c, idx) => {
     const subRank = idx + 1;
     let rowStyle = '';
     if (selectedCountry === c.iso_a3) {
-      rowStyle = `background-color:${COL_SELECTED};color:#1c1917;`;
+      rowStyle = `background-color:${COL_SELECTED};color:#1c1917`;
     } else if (selectedData) {
-      rowStyle = selectedData[c.iso_a3] === true
-        ? 'background-color:rgba(245,158,11,0.12);'
-        : 'opacity:0.4;';
+      rowStyle = (selectedData[c.iso_a3] === true) ? 'background-color:rgba(245,158,11,0.12)' : 'opacity:0.4';
     }
+
+    const popRaw = c.population != null ? Number(c.population).toLocaleString() : '—';
+    const popM = c.population != null ? (c.population / 1e6).toFixed(2) : '—';
+    const mpm = c.observed_mpm != null ? Number(c.observed_mpm).toFixed(2) : '—';
+    const multi = c['medals.multi.winners'] ?? '—';
+    const flagCell = `<td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>`;
 
     if (mapOpen) {
-      rows.push(`
-        <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
-          <td class="rank-num sub-rank-cell">${subRank}</td>
-          <td class="rank-num">${c[rKey] ?? '—'}</td>
-          <td class="country-name">${c.country}</td>
-        </tr>`);
-    } else {
-      rows.push(`
-        <tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
-          <td class="rank-num sub-rank-cell">${subRank}</td>
-          <td class="rank-num">${c[rKey] ?? '—'}</td>
-          <td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>
-          <td class="country-name">${c.country}</td>
-          <td class="medal-cell medal-gold">${c['medal_total'] ?? '—'}</td>
-          <td class="medal-cell">${c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—'}</td>
-        </tr>`);
+      const mapRankContent = isBayesRank
+        ? `${c[rKey] ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span>`
+        : `${c[rKey] ?? '—'}`;
+      const mapRowHtml = `<tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+        <td class="rank-num sub-rank-cell">${subRank}</td>
+        <td class="rank-num">${mapRankContent}</td>
+        <td class="country-name">${c.country}</td>
+        <td class="medal-cell medal-gold">${c.medal_total ?? '—'}</td>
+        <td style="text-align:right">${popM}</td>
+      </tr>`;
+      return mapRowHtml;
     }
 
-    // Inject detail row immediately after selected country
-    if (selectedCountry === c.iso_a3) {
-      rows.push(buildDetailHTML(c, colspan));
+    const rankCellContent = isBayesRank
+      ? `${c[rKey] ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span>`
+      : `${c[rKey] ?? '—'}`;
+    const bayesMeanCell = !isBayesRank
+      ? `<td style="text-align:right">${c.rank_mean_beta ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span></td>`
+      : '';
+
+    const rowHtml = `<tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+      <td class="rank-num sub-rank-cell">${subRank}</td>
+      <td class="rank-num">${rankCellContent}</td>
+      ${flagCell}
+      <td class="country-name">${c.country}</td>
+      <td class="medal-cell medal-gold">${c.medal_total ?? '—'}</td>
+      <td style="text-align:right">${popRaw}</td>
+      <td style="text-align:right">${mpm}</td>
+      <td style="text-align:right">${multi}</td>
+      ${bayesMeanCell}
+    </tr>`;
+
+    if (selectedCountry && c.iso_a3 === selectedCountry) {
+      return rowHtml + buildDetailHTML(c, colspan);
     }
+    return rowHtml;
   });
 
   tbody.innerHTML = rows.join('');
 
-  // Animate detail row open
   const detailRow = tbody.querySelector('.detail-row');
   if (detailRow) animateDetailOpen(detailRow);
 
-  // Scroll selected row into view
   const selRow = tbody.querySelector(`tr.country-row[data-iso="${selectedCountry}"]`);
   if (selRow) selRow.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 
-  tbody.querySelectorAll('tr.country-row').forEach(row =>
-    row.addEventListener('click', () => selectCountry(row.dataset.iso))
-  );
+  tbody.querySelectorAll('tr.country-row').forEach(row => {
+    row.addEventListener('click', () => selectCountry(row.dataset.iso));
+  });
+
+  const sigLegend = document.getElementById('sig-legend');
+  if (sigLegend) sigLegend.classList.toggle('visible', !!selectedCountry);
+
+  renderMapDetailPanel();
 }
 
 /* ── Select country ── */
 function selectCountry(iso) {
   selectedCountry = selectedCountry === iso ? null : iso;
   renderMap();
-  renderTable(document.getElementById('table-search')?.value || '');
+  renderTable(document.getElementById('table-search')?.value);
 }
 
 /* ── Refresh ── */
 function refresh() {
   initSlider();
   renderMap();
-  renderTable(document.getElementById('table-search')?.value || '');
+  renderTable(document.getElementById('table-search')?.value);
 }
 
 /* ── Controls ── */
@@ -557,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sel-ranking')?.addEventListener('change', e => {
     currentRanking = e.target.value;
     renderMap();
-    renderTable(document.getElementById('table-search')?.value || '');
+    renderTable(document.getElementById('table-search')?.value);
   });
 
   document.getElementById('sel-variable')?.addEventListener('change', e => {
@@ -574,16 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
     refresh();
   });
 
-  document.getElementById('btn-map-toggle')?.addEventListener('click', () => {
-    setMapOpen(!mapOpen);
-  });
+  document.getElementById('btn-map-toggle')?.addEventListener('click', () => setMapOpen(!mapOpen));
 
   const lo = document.getElementById('slider-lo');
   const hi = document.getElementById('slider-hi');
 
   function onSliderChange() {
-    const loVal     = parseFloat(lo.value);
-    const hiVal     = parseFloat(hi.value);
+    const loVal = parseFloat(lo.value);
+    const hiVal = parseFloat(hi.value);
     const transform = lo.dataset.transform || 'linear';
     if (transform === 'log') {
       intervalLo = Math.pow(10, loVal);
@@ -595,7 +586,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (intervalLo > intervalHi) [intervalLo, intervalHi] = [intervalHi, intervalLo];
     updateSliderDisplay();
     renderMap();
-    renderTable(document.getElementById('table-search')?.value || '');
+    renderTable(document.getElementById('table-search')?.value);
   }
 
   lo?.addEventListener('input', onSliderChange);
@@ -604,13 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.rank-table th[data-sort]').forEach(th => {
     th.addEventListener('click', () => {
       const key = th.dataset.sort;
-      if (sortKey === key) {
-        sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-      } else {
-        sortKey = key;
-        sortDir = 'asc';
-      }
-      renderTable(document.getElementById('table-search')?.value || '');
+      if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortKey = key; sortDir = 'asc'; }
+      renderTable(document.getElementById('table-search')?.value);
     });
   });
 });
