@@ -581,3 +581,61 @@
   .rank-table thead th, .rank-table td { padding: var(--space-1) var(--space-2); }
   .dash-card-title { font-size: var(--text-xs); }
 }
+
+
+.rank-table {
+  table-layout: fixed;
+}
+
+.rank-table .sub-rank-th,
+.rank-table .sub-rank-cell {
+  width: 32px;
+  min-width: 32px;
+}
+
+.rank-table th.rank-num,
+.rank-table td.rank-num {
+  width: 80px;
+  min-width: 64px;
+}
+
+/* Remove flag as its own column — tuck it flush against country name */
+.rank-table .flag-cell {
+  width: 1px;
+  min-width: 0;
+  max-width: none;
+  padding: 0 !important;
+  padding-left: var(--space-4) !important;
+  padding-right: 1px !important;
+  white-space: nowrap;
+}
+
+.rank-table .flag-cell img {
+  width: 1.5rem;
+  height: 1rem;
+  min-width: 1.5rem;
+  flex-shrink: 0;
+  display: block;
+  vertical-align: middle;
+}
+
+.rank-table .country-name {
+  width: auto;
+  padding-left: 1px !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rank-table .medal-cell {
+  width: 90px;
+  min-width: 70px;
+}
+
+@media (max-width: 900px) {
+  .rank-table th.rank-num,
+  .rank-table td.rank-num {
+    width: 52px;
+    min-width: 52px;
+  }
+  .rank-table .flag-cell img { width: 1.25rem; height: 0.85rem; min-width: 1.25rem; }
+}
