@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bayesian Ranking of Olympic Performances</title>
+  <meta name="description" content="Cormac MacDermott, Carl Scarrott, John Ferguson" />
+
+  <!--Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@400,500,700,800&display=swap" rel="stylesheet">
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@300,400,500,600,700&display=swap" rel="stylesheet">
+
+  <!-- Lucide icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./assets/css/base.css">
+  <link rel="stylesheet" href="./assets/css/layout.css">
+</head>
+
+<body>
+  <div id="nav-placeholder"></div>
+
+  <main id="main">
+
+    <!-- Hero -->
+    <header class="hero">
+      <div class="hero-inner">
+        <div class="hero-label">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="4"/></svg>
+          Some text...
+        </div>
+        <h1><em>Bayesian Ranking of<br>Olympic Medal Performance</em></h1>
+        <p class="hero-desc">Evaluating a country’s sporting success can provide insight into its decision making and the infrastructure used to develop athletic talent. The Olympic Games
+serve as a global benchmark, yet conventional medal tables can be overly influenced by population size and can be highly variable, particularly for smaller nations where outcomes are more affected by stochastic fluctuations. We propose a Bayesian ranking scheme to rank the performance of National Olympic Committees by inferring an underlying ‘long-run’ medals-to-population ratio from the results of a single Olympic Games. The approach applies shrinkage to stabilise estimates for small-population countries (which are most susceptible to random variation) while leaving large-population countries comparatively unchanged. The Bayesian framework yields posterior distributions over both the inferred medals per-capita performance and the induced ranks, providing a principled measure of uncertainty in each country’s ranking position and highlighting cases where apparent differences between neighbouring
+countries are not credibly distinguishable. These posterior rank summaries give a more stable and interpretable ordering of national sporting performance than point-estimate medal tables, while making uncertainty in comparative performance explicit.</p>
+        <div class="hero-actions">
+          <a href="./dashboard.html" class="btn btn-primary">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            Open Dashboard
+          </a>
+          <a href="#research" class="btn btn-ghost">Explore methodology</a>
+      </div>
+    </header>
+
+    <!-- Research / Methodology -->
+    <section id="research" style="background: var(--color-surface-offset);">
+      <div class="container-wide reveal">
+        <p class="section-label">Methodology</p>
+        <h2 class="section-title">How the model works</h2>
+        <p class="section-body">We propose a hierarchical Bayesian model that estimates each country's true per-capita medal rate via shrinkage. Small nations with sparse medal counts are stabilised toward the global average, while large nations are driven by their own observations.</p>
+
+        <div class="research-grid">
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="sigma" width="20" height="20"></i></div>
+            <h3>Likelihood</h3>
+            <p>Let M<sub>i,c</sub> be the number of athletes from country c who won exactly i medals. Multi-medalists are modelled separately as independent Poisson random variables to preserve event independence, with rates determined by population size n<sub>c</sub> and the individual probability p<sub>i,c</sub> of winning i medals. This Poisson model is justified by a small p, large n approximation to a Binomial process.</p>
+            <span class="research-card-tag">Model</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="git-branch" width="20" height="20"></i></div>
+            <h3>Conditional structure</h3>
+            <p>Since multiple-medal athletes are rare, the probabilities p<sub>i,c</sub> are defined through conditional probabilities q<sub>i</sub> = P(X<sub>c</sub> ≥ i | X<sub>c</sub> ≥ i-1) and the probability that a randomly selected individual from that nation wins at least one medal, p<sub>c</sub> = P(X<sub>c</sub> ≥ 1).
+              <span class="pop-term" tabindex="0">This structure allows information to be shared across medal tiers<span class="pop-bubble">This structure allows information to be shared across medal tiers, helping MCMC convergence.</span></span>.
+            </p>
+            <span class="research-card-tag">Model</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="sliders" width="20" height="20"></i></div>
+            <h3>Priors &amp; hyperpriors</h3>
+            <p>
+              <span class="pop-term" tabindex="0">Few nations have multi-medallists<span class="pop-bubble">Few nations have multi-medallists, leaving α<sub>q</sub> and β<sub>q</sub> poorly identified, leading to MCMC non-convergence under uninformative priors.</span></span>,
+              so we reparameterise via the beta mean θ<sub>q</sub> = α<sub>q</sub>/(α<sub>q</sub>+β<sub>q</sub>), which implicitly induces a prior on α<sub>q</sub>. As only 11 athletes in Paris 2024 won 3 or more medals, q<sub>3</sub> and q<sub>4</sub> are set as global constants across all countries, pooled with uninformative priors. Posterior inference is performed via Gibbs sampling using the rJAGS package.
+            </p>
+            <span class="research-card-tag">Inference</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="git-commit-horizontal" width="20" height="20"></i></div>
+            <h3>Shrinkage</h3>
+            <p>Posterior estimates apply stronger shrinkage to countries with smaller populations or medal counts driven by a few multi-medalists.
+              <span class="pop-term" tabindex="0">Large-population countries<span class="pop-bubble">Countries with large populations and medal counts show narrow credible intervals, reflecting minimal shrinkage and high credibility in their estimates.</span></span> stay close to their observed rate, while
+              <span class="pop-term" tabindex="0">small nations with few medals<span class="pop-bubble">Small nations with few medals have their observed rates shrunk considerably and exhibit wide credible intervals.</span></span> are pulled toward the global average.
+            </p>
+            <span class="research-card-tag">Result</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="list-ordered" width="20" height="20"></i></div>
+            <h3>Ranking methods compared</h3>
+            <p><strong>Total medal counts</strong> favour larger nations with bigger populations to draw from. <strong>Medals per-capita</strong> favours less populous nations and can be highly variable game to game.
+              <span class="pop-term" tabindex="0">The U-index (Duncan &amp; Parece, 2024)<span class="pop-bubble">A recent approach attempting to correct for these issues. Countries are ranked by the probability of winning their observed medal count or more, under a null binomial model assuming equal per-capita medal-winning capability (like a p-value). Consequently, small nations with limited population cannot accumulate sufficient evidence to rank highly, while large nations are pushed artificially outward: upward if above the global average rate, downward if below, regardless of actual per-capita performance.</span></span> attempts to correct for these issues, but conflates effect size with standard error — a larger population yields a smaller p-value regardless of whether the performance warrants it (Wasserstein &amp; Lazar, 2016).
+            </p>
+            <span class="research-card-tag">Comparison</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="scale" width="20" height="20"></i></div>
+            <h3>Credibly different ranks</h3>
+            <p>An advantage of obtaining a posterior distribution of ranks is that ranking uncertainty can be assessed by a 95% credible interval for the true rank of a country.
+              <span class="pop-term" tabindex="0">Statistical significance<span class="pop-bubble">We take the difference in the two countries' ranked medal rates at each of the posterior draws. We define the rank difference to be statistically significant when the credible interval computed via the middle 95% of these rank differences excludes zero.</span></span> is defined via this credible interval.
+            </p>
+            <span class="research-card-tag">Uncertainty</span>
+          </div>
+
+          <div class="research-card">
+            <div class="research-card-icon"><i data-lucide="layout-dashboard" width="20" height="20"></i></div>
+            <h3>Explore it yourself</h3>
+            <p>An interactive dashboard allows full exploration of the Bayesian ranking results for all NOCs, including all other ranking methods considered, across every Olympic Games since Athens 2004, with key demographics for user-specific comparison.</p>
+            <a href="./dashboard.html" class="contact-link" style="margin-top:var(--space-3);display:inline-flex;">
+              <i data-lucide="arrow-right" width="16" height="16"></i>
+              Launch the dashboard
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- Figures -->
+    <section id="figures" style="background: var(--color-surface);">
+      <div class="container-wide reveal">
+        <p class="section-label">Results</p>
+        <h2 class="section-title">Figures</h2>
+
+        <div class="pub-list">
+          <div class="pub-item">
+            <div class="pub-year">01</div>
+            <div>
+              <div class="pub-title">Shrinkage of observed medals per-million to posterior estimates</div>
+              <img src="./assets/figures/fig_main_shrinkage_mpm.png" alt="Shrinkage of medals per million" style="border-radius:var(--radius-md);border:1px solid var(--color-divider);margin-top:var(--space-3);width:100%;">
+            </div>
+          </div>
+          <div class="pub-item">
+            <div class="pub-year"></div>
+            <div>
+              <div class="pub-title">Posterior mean rank with credible interval for true rank</div>
+              <img src="./assets/figures/fig_main_credranks.png" alt="Credible ranks" style="border-radius:var(--radius-md);border:1px solid var(--color-divider);margin-top:var(--space-3);width:100%;">
+            </div>
+          </div>
+          <div class="pub-item">
+            <div class="pub-year">04</div>
+            <div>
+              <div class="pub-title">Table 2 — Bayesian ranking of the top 10 and selected countries, Paris 2024</div>
+              <img src="./assets/figures/fig_main_comparison.png" alt="Ranking comparison table" style="border-radius:var(--radius-md);border:1px solid var(--color-divider);margin-top:var(--space-3);width:100%;">
+            </div>
+          </div>
+          <div class="pub-item">
+            <div class="pub-year">05</div>
+            <div>
+              <div class="pub-title">Simulated bump chart of USA rank across scaling factors</div>
+              <img src="./assets/figures/fig_main_bump.png" alt="Simulation bump chart" style="border-radius:var(--radius-md);border:1px solid var(--color-divider);margin-top:var(--space-3);width:100%;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" style="background: var(--color-surface);">
+      <div class="container reveal">
+        <div class="contact-grid">
+          <div>
+            <p class="section-label">Contact</p>
+            <h2 class="section-title">Get in touch</h2>
+            <p class="section-body">Happy to discuss the methodology and results.</p>
+            <div class="contact-links">
+              <a href="mailto:c.macdermott5@universityofgalway.ie" class="contact-link">
+                <i data-lucide="mail" width="16" height="16"></i>
+                c.macdermott5@universityofgalway.ie
+              </a>
+              <a href="https://github.com/Cormy1" target="_blank" rel="noopener noreferrer" class="contact-link">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+                GitHub
+              </a>
+            </div>
+          </div>
+          <div style="background:var(--color-surface-offset);border-radius:var(--radius-xl);padding:var(--space-8);border:1px solid oklch(from var(--color-text) l c h / 0.07);">
+            <h3 style="font-size:var(--text-base);font-weight:600;margin-bottom:var(--space-5);">Also happy to discuss…</h3>
+            <ul style="list-style:none;display:flex;flex-direction:column;gap:var(--space-3);">
+              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Research on sports analytics</li>
+              <li style="display:flex;align-items:flex-start;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);"><i data-lucide="check-circle-2" width="16" height="16" style="color:var(--color-primary);flex-shrink:0;margin-top:2px;"></i>Feedback on my work</li>
+
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="./assets/js/theme.js" defer></script>
+  <script src="./assets/js/scroll.js" defer></script>
+  <script>
+    // Component loader
+    async function loadComponent(id, url) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      try { el.innerHTML = await fetch(url).then(r => r.text()); } catch(e) {}
+    }
+    loadComponent('nav-placeholder',    './components/nav.html');
+    loadComponent('footer-placeholder', './components/footer.html');
+
+    // Lucide icons (after DOM ready)
+    document.addEventListener('DOMContentLoaded', () => lucide.createIcons());
+  </script>
+</body>
+</html>

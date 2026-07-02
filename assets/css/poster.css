@@ -1,0 +1,264 @@
+/* ══════════════════════════════════════════════
+poster.css — Index page styled after research poster
+══════════════════════════════════════════════ */
+
+#main, .poster-hero, .poster-section {
+  --poster-purple: #5b2a86;
+  --poster-purple-dark: #3d1c5c;
+  --poster-purple-light: #ede3f6;
+  --poster-lavender: #f4eefb;
+}
+
+/* ── Hero ── */
+.poster-hero {
+  padding-top: calc(3.75rem + var(--space-16));
+  padding-bottom: var(--space-16);
+  background: linear-gradient(180deg, var(--poster-purple-dark) 0%, var(--poster-purple) 100%);
+  color: #ffffff;
+}
+.poster-eyebrow {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #d9c5ef;
+  margin-bottom: var(--space-3);
+}
+.poster-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 400;
+  line-height: 1.1;
+  margin-bottom: var(--space-4);
+  color: #ffffff;
+}
+.poster-title em {
+  font-style: italic;
+  color: #f0c419;
+}
+.poster-authors {
+  font-size: var(--text-base);
+  color: #e3d3f2;
+  margin-bottom: var(--space-6);
+}
+.poster-lede {
+  font-size: var(--text-lg);
+  color: #f4eefb;
+  max-width: 68ch;
+  line-height: 1.6;
+}
+
+/* ── Sections ── */
+.poster-section {
+  padding-block: var(--space-16);
+  background: var(--color-surface);
+}
+.poster-section-alt {
+  background: var(--poster-lavender);
+}
+.poster-section .section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 400;
+  color: var(--poster-purple-dark);
+  margin-bottom: var(--space-6);
+  background: linear-gradient(90deg, var(--poster-purple) 0%, transparent 65%);
+  background-size: 100% 3px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  padding-bottom: 10px;
+  display: inline-block;
+}
+.poster-subhead {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--color-text);
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+.poster-section p {
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+  max-width: 76ch;
+  line-height: 1.75;
+}
+.poster-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-style: italic;
+  max-width: 76ch;
+}
+.poster-highlight {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--poster-purple-dark);
+  background: var(--poster-purple-light);
+  border-left: 4px solid var(--poster-purple);
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  max-width: 76ch;
+}
+
+/* ── Interactive purple popup terms ── */
+.pop-term {
+  position: relative;
+  color: var(--poster-purple);
+  font-weight: 600;
+  border-bottom: 1.5px dotted var(--poster-purple);
+  cursor: help;
+}
+.pop-bubble {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  z-index: 20;
+  width: min(340px, 80vw);
+  background: var(--poster-purple-dark);
+  color: #ffffff;
+  font-weight: 400;
+  font-size: var(--text-sm);
+  line-height: 1.55;
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity 180ms ease, transform 180ms ease, visibility 180ms;
+  pointer-events: none;
+}
+.pop-bubble::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 20px;
+  border: 7px solid transparent;
+  border-top-color: var(--poster-purple-dark);
+}
+.pop-term:hover .pop-bubble,
+.pop-term:focus .pop-bubble,
+.pop-term:focus-visible .pop-bubble {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+@media (max-width: 640px) {
+  .pop-bubble { left: 50%; transform: translate(-50%, 6px); width: min(300px, 85vw); }
+  .pop-term:hover .pop-bubble,
+  .pop-term:focus .pop-bubble { transform: translate(-50%, 0); }
+  .pop-bubble::after { left: 50%; transform: translateX(-50%); }
+}
+
+/* ── Method cards ── */
+.poster-method-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-5);
+  margin-bottom: var(--space-8);
+}
+.poster-method-card {
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-divider);
+  border-top: 3px solid var(--poster-purple);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+}
+.poster-method-card h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--poster-purple-dark);
+  margin-bottom: var(--space-2);
+}
+.poster-method-card p {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: 0;
+}
+.cite {
+  font-size: 0.8em;
+  font-weight: 400;
+  color: var(--color-text-faint);
+}
+
+/* ── Callout box ── */
+.poster-callout {
+  background: var(--poster-purple-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-8);
+  max-width: 76ch;
+}
+.poster-callout h4 {
+  font-family: var(--font-display);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--poster-purple-dark);
+  margin-bottom: var(--space-2);
+}
+.poster-callout p {
+  font-size: var(--text-sm);
+  margin-bottom: 0;
+}
+
+/* ── Figures ── */
+.poster-figure {
+  margin-top: var(--space-6);
+  text-align: center;
+}
+.poster-figure-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+.poster-pdf {
+  width: 100%;
+  height: 360px;
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-md);
+  background: #ffffff;
+}
+.poster-pdf-lg { height: 480px; }
+.poster-caption {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+  max-width: 70ch;
+  margin-inline: auto;
+}
+
+/* ── CTA ── */
+.poster-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+  background: var(--poster-purple);
+  color: #ffffff;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  text-decoration: none;
+}
+.poster-cta:hover { background: var(--poster-purple-dark); }
+
+/* ── References ── */
+.poster-refs { background: var(--poster-purple-dark); color: #f4eefb; }
+.poster-refs .section-title { color: #ffffff; background-image: linear-gradient(90deg, #f0c419 0%, transparent 65%); }
+.poster-ref-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  font-size: var(--text-sm);
+  max-width: 80ch;
+}
+.poster-ref-list em { font-style: italic; color: #d9c5ef; }
+
+@media (max-width: 640px) {
+  .poster-title { font-size: var(--text-xl); }
+  .poster-pdf { height: 260px; }
+  .poster-pdf-lg { height: 320px; }
+}
