@@ -465,3 +465,119 @@
   font-weight: 600;
   color: var(--color-text);
 }
+
+@media (max-width: 900px) {
+
+  /* Force single-column stacking even when map is open,
+     and ensure the map panel renders BELOW the table panel */
+  .dash-layout,
+  .dash-layout.map-open {
+    grid-template-columns: 1fr !important;
+    gap: var(--space-4);
+  }
+
+  #dashboard .dash-layout > .dash-card:first-child { order: 1; }
+  #map-panel { order: 2; }
+
+  #map-panel.visible {
+    display: block;
+    margin-top: 0;
+  }
+
+  #map {
+    min-height: 320px;
+    height: 320px !important;
+  }
+
+  .rank-table-wrap {
+    max-height: 50vh;
+  }
+
+  /* Controls: stack and go full-width for easy tapping */
+  .dash-controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
+
+  .control-group select,
+  .dual-range {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .control-group select {
+    padding: var(--space-3);
+    font-size: var(--text-base);
+  }
+
+  /* Card headers: wrap gracefully, keep buttons reachable */
+  .dash-card-header {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .dash-card-title { font-size: var(--text-sm); }
+
+  #btn-map-toggle,
+  #btn-reset {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  /* Table: shrink padding & font for narrow viewports, keep tap targets big */
+  .rank-table thead th,
+  .rank-table td {
+    padding: var(--space-2) var(--space-2);
+    font-size: var(--text-xs);
+  }
+
+  .rank-table tbody tr { min-height: 44px; }
+
+  .country-name {
+    white-space: normal;
+    max-width: 7rem;
+  }
+
+  .flag-cell { width: 1.5rem; }
+  .flag-cell img { width: 1.25rem; height: 0.85rem; }
+
+  /* Detail stat grid: 2 columns instead of auto-fill so it doesn't get cramped */
+  .detail-stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .detail-stat-val { font-size: var(--text-sm); }
+
+  /* Search input: bigger tap target */
+  .search-input {
+    padding: var(--space-3);
+    font-size: var(--text-base);
+  }
+
+  /* Legends wrap cleanly and shrink text */
+  .map-legend,
+  .border-legend,
+  .sig-legend {
+    padding: var(--space-3) var(--space-4);
+    font-size: 0.7rem;
+    gap: var(--space-2);
+  }
+
+  .legend-swatch { width: 0.8rem; height: 0.55rem; }
+
+  /* Section title underline scales down a touch */
+  .section-title { padding-bottom: 4px; }
+}
+
+@media (max-width: 480px) {
+  #map { min-height: 260px; height: 260px !important; }
+  .rank-table-wrap { max-height: 45vh; }
+  .country-name { max-width: 5.5rem; font-size: 0.75rem; }
+  .rank-table thead th, .rank-table td { padding: var(--space-1) var(--space-2); }
+  .dash-card-title { font-size: var(--text-xs); }
+}
