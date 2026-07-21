@@ -1,48 +1,49 @@
 :root, [data-theme="light"] {
-  /* Surfaces — clean cool-white */
-  --color-bg:               #f4f7f6;
-  --color-surface:          #f9fbfa;
+  /* Surfaces — warm neutral */
+  --color-bg:               #f8f5f4;
+  --color-surface:          #fdfbfa;
   --color-surface-2:        #ffffff;
-  --color-surface-offset:   #edf2f0;
-  --color-surface-dynamic:  #e2ebe7;
-  --color-divider:          #d4ddd9;
-  --color-border:           #c6d2ce;
+  --color-surface-offset:   #f0ebe9;
+  --color-surface-dynamic:  #e8dfdc;
+  --color-divider:          #ddd2cf;
+  --color-border:           #ccbdb8;
 
   /* Text */
-  --color-text:             #0f1f1b;
-  --color-text-muted:       #4a6560;
-  --color-text-faint:       #91aaa4;
-  --color-text-inverse:     #f4f7f6;
+  --color-text:             #1f0f14;
+  --color-text-muted:       #6b4a52;
+  --color-text-faint:       #a89197;
+  --color-text-inverse:     #f8f5f4;
 
-  /* Primary — Teal Green #009E73 */
-  --color-primary:          #009E73;
-  --color-primary-hover:    #007d5c;
-  --color-primary-active:   #005e44;
-  --color-primary-light:    #d0ede5;
+  /* Primary — Galway Maroon #a80050 */
+  --color-primary:          #a80050;
+  --color-primary-hover:    #84003d;
+  --color-primary-active:   #5e002c;
+  --color-primary-light:    rgba(168,0,80,0.12);
 
-  /* Accent — Cobalt Blue #0072B2 */
-  --color-accent:           #0072B2;
-  --color-accent-hover:     #005a8e;
-  --color-accent-active:    #004470;
-  --color-accent-light:     #cce0ef;
+  /* Accent — Deep Amber/Gold #c8860d */
+  --color-accent:           #c8860d;
+  --color-accent-hover:     #a56d0a;
+  --color-accent-active:    #7d5307;
+  --color-accent-light:     #f3e6c9;
 
   /* Semantic */
-  --color-gold:             #b07d00;
+  --color-gold:             #c8860d;
   --color-error:            #c0392b;
-  --color-success:          #009E73;
+  --color-success:          #a80050;
 
-  /* Shadows — cool-tinted */
-  --color-shadow:           oklch(0.25 0.02 170 / 0.10);
+  /* Shadows — warm-tinted */
+  --color-shadow:           oklch(0.25 0.03 350 / 0.10);
   --shadow-sm:              0 1px 3px var(--color-shadow);
   --shadow-md:              0 4px 14px var(--color-shadow);
-  --shadow-lg:              0 12px 36px oklch(0.25 0.02 170 / 0.14);
-  
+  --shadow-lg:              0 12px 36px oklch(0.25 0.03 350 / 0.14);
+
   --radius-sm:              0.375rem;
   --radius-md:              0.5rem;
   --radius-lg:              0.75rem;
   --radius-xl:              1rem;
   --radius-full:            9999px;
-    /* Typography */
+
+  /* Typography */
   --font-display: 'Cabinet Grotesk', 'Helvetica Neue', sans-serif;
   --font-body:              'Satoshi', 'Helvetica Neue', sans-serif;
   --text-xs:                clamp(0.75rem,  0.7rem  + 0.25vw, 0.875rem);
@@ -63,32 +64,32 @@
 
 /* ── Dark mode ── */
 [data-theme="dark"] {
-  --color-bg:               #0d1714;
-  --color-surface:          #121e1a;
-  --color-surface-2:        #17251f;
-  --color-surface-offset:   #1a2922;
-  --color-surface-dynamic:  #243530;
-  --color-divider:          #233028;
-  --color-border:           #2e3f38;
+  --color-bg:               #170d10;
+  --color-surface:          #1e1216;
+  --color-surface-2:        #241519;
+  --color-surface-offset:   #2a1a1e;
+  --color-surface-dynamic:  #35232a;
+  --color-divider:          #2e1b20;
+  --color-border:           #3f2830;
 
-  --color-text:             #ccd9d5;
-  --color-text-muted:       #6e9189;
-  --color-text-faint:       #3d5c55;
-  --color-text-inverse:     #0d1714;
+  --color-text:             #ecd8dc;
+  --color-text-muted:       #a1727c;
+  --color-text-faint:       #5c3d44;
+  --color-text-inverse:     #170d10;
 
-  --color-primary:          #00c48f;
-  --color-primary-hover:    #00a376;
-  --color-primary-active:   #007d5c;
-  --color-primary-light:    #0d3028;
+  --color-primary:          #e0356f;
+  --color-primary-hover:    #c21f57;
+  --color-primary-active:   #9c1747;
+  --color-primary-light:    #331120;
 
-  --color-accent:           #4da6d8;
-  --color-accent-hover:     #2b8fbf;
-  --color-accent-active:    #1474a3;
-  --color-accent-light:     #0a2535;
+  --color-accent:           #e8b84b;
+  --color-accent-hover:     #d1a032;
+  --color-accent-active:    #a97f22;
+  --color-accent-light:     #332411;
 
   --color-gold:             #e8b84b;
   --color-error:            #e55a4e;
-  --color-success:          #00c48f;
+  --color-success:          #e0356f;
 
   --color-shadow:           oklch(0 0 0 / 0.35);
   --shadow-sm:              0 1px 3px var(--color-shadow);
@@ -100,11 +101,11 @@
 /* System preference fallback */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
-    --color-bg: #0d1714; --color-surface: #121e1a; --color-surface-2: #17251f;
-    --color-surface-offset: #1a2922; --color-divider: #233028; --color-border: #2e3f38;
-    --color-text: #ccd9d5; --color-text-muted: #6e9189; --color-text-faint: #3d5c55;
-    --color-primary: #00c48f; --color-primary-hover: #00a376; --color-primary-light: #0d3028;
-    --color-accent: #4da6d8; --color-accent-hover: #2b8fbf; --color-accent-light: #0a2535;
+    --color-bg: #170d10; --color-surface: #1e1216; --color-surface-2: #241519;
+    --color-surface-offset: #2a1a1e; --color-divider: #2e1b20; --color-border: #3f2830;
+    --color-text: #ecd8dc; --color-text-muted: #a1727c; --color-text-faint: #5c3d44;
+    --color-primary: #e0356f; --color-primary-hover: #c21f57; --color-primary-light: #331120;
+    --color-accent: #e8b84b; --color-accent-hover: #d1a032; --color-accent-light: #332411;
     --color-gold: #e8b84b;
     --shadow-sm: 0 1px 3px oklch(0 0 0 / 0.35);
     --shadow-md: 0 4px 14px oklch(0 0 0 / 0.35);

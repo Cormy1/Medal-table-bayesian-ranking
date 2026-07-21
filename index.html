@@ -28,10 +28,6 @@
     <!-- Hero -->
     <header class="hero">
       <div class="hero-inner">
-        <div class="hero-label">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor" aria-hidden="true"><circle cx="6" cy="6" r="4"/></svg>
-          Some text...
-        </div>
         <h1><em>Bayesian Ranking of<br>Olympic Medal Performance</em></h1>
         <p class="hero-desc">Evaluating a country’s sporting success can provide insight into its decision making and the infrastructure used to develop athletic talent. The Olympic Games
 serve as a global benchmark, yet conventional medal tables can be overly influenced by population size and can be highly variable, particularly for smaller nations where outcomes are more affected by stochastic fluctuations. We propose a Bayesian ranking scheme to rank the performance of National Olympic Committees by inferring an underlying ‘long-run’ medals-to-population ratio from the results of a single Olympic Games. The approach applies shrinkage to stabilise estimates for small-population countries (which are most susceptible to random variation) while leaving large-population countries comparatively unchanged. The Bayesian framework yields posterior distributions over both the inferred medals per-capita performance and the induced ranks, providing a principled measure of uncertainty in each country’s ranking position and highlighting cases where apparent differences between neighbouring
@@ -142,19 +138,18 @@ countries are not credibly distinguishable. These posterior rank summaries give 
       </div>
     </section>
 
-    <!-- References -->
-    <section style="background: var(--color-surface);">
-      <div class="container reveal">
-        <h2 class="section-title">References</h2>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:var(--space-3);font-size:var(--text-sm);color:var(--color-text-muted);">
-          <li>Laird, N. M. &amp; Louis T. A. (1989). Empirical Bayes ranking methods. Journal of Eduactional Statistics, 14(1), 29-46</li>
-          <li>Duncan, R. C. &amp; Parece, A. (2024). Population-adjusted national rankings in the Olympics. Journal of Sports Analystics, 10(1), 87 -104.</li>
-          <li>United Nations (2025). UN Department of Economics, Population Division Data Downloads.</li>
-          <li>Wasserstain, R. L. &amp; Lazar, N. A. (2016). The ASA statement on p-values: Context, process, and purpose. The American Statistician, 70(2), 129-133</li>
-          <li>.... Rest of references from paper, maybe possible to make clickable to teh actual papers/ have this as a spearte page</li>
-        </ul>
-      </div>
-    </section>
+<!-- References -->
+<section style="background: var(--color-surface);">
+  <div class="container reveal">
+    <h2 class="section-title">References</h2>
+    <p class="section-body">
+      This work draws on Bayesian ranking theory, Olympic medal analysis, and open data sources.
+    </p>
+    <a href="./references.html" class="btn btn-primary" style="margin-top: var(--space-4);">
+      View full references →
+    </a>
+  </div>
+</section>
 
     <!-- Contact -->
     <section id="contact" style="background: var(--color-surface-offset);">

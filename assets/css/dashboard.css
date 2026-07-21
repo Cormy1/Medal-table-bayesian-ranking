@@ -9,9 +9,9 @@
 --color-primary-hover: #84003d;  /* Galway deep maroon, was d97706 */
 --color-primary-light: rgba(168,0,80,0.12);  /* was rgba(245,158,11,0.12) */
 --color-gold: #c8860d;           /* deepened amber — kept as secondary accent */
-  --color-bg:             #f0f4f8;
-  --color-surface:        #ffffff;
-  --color-surface-offset: #e8edf3;
+  --color-bg:             #ffffff;
+  --color-surface:         #ffffff;
+  --color-surface-offset: #ffffff;
   --color-text:           #0f172a;
   --color-text-muted:     #64748b;
   --color-divider:        rgba(15,23,42,0.08);

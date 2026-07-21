@@ -642,13 +642,13 @@ function renderMapLegend() {
   borderEl.style.display = 'flex';
   borderEl.innerHTML = `
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid ${COL_NOT_SIG_BDR}"></span> Not significantly different
+      <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid ${COL_NOT_SIG_BDR}"></span> No credible rank difference (95% CI overlap) 
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:${COL_HIGHER_FILL};display:inline-block"></span> Significantly ranked higher
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_HIGHER_FILL};display:inline-block"></span> Credibly ranked higher (95% CI)
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:${COL_LOWER_FILL};display:inline-block"></span> Significantly ranked lower
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_LOWER_FILL};display:inline-block"></span> Credibly ranked lower (95% CI)
     </span>
   `;
 }
