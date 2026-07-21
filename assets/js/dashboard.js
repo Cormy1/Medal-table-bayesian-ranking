@@ -12,16 +12,6 @@ fetch('./assets/data/app_data.json')
   })
   .catch(err => console.error('Failed to load app_data.json:', err));
 
-/* ── GeoJSON world polygons ── */
-let worldGeoJSON = null;
-fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
-  .then(r => r.json())
-  .then(data => {
-    worldGeoJSON = data;
-    if (Object.keys(GAMES_DATA).length) renderMap();
-  })
-  .catch(err => console.warn('GeoJSON failed to load:', err));
-
 /* ── Key maps ── */
 const RANKING_KEY = {
   "Rank.Bayes.cond": "rank_mean_beta",
@@ -32,8 +22,8 @@ const RANKING_KEY = {
 };
 
 const VARIABLE_KEY = {
-  "Rank.Bayes.cond": "rank_mean",
-  "Rank.Median.Bayes": "rank_median",
+  "Rank.Bayes.cond": "rank_mean_beta",
+  "Rank.Median.Bayes": "rank_median_beta",
   "Rank.dp": "rank_dp",
   "Rank.percap": "rank_pc",
   "Rank.Total": "rank_total",
@@ -41,6 +31,18 @@ const VARIABLE_KEY = {
   "total_pop_july": "population",
   "NY.GDP.PCAP.KD": "NY.GDP.PCAP.KD",
   "life_expectancy_birth": "SP.DYN.LE00.IN"
+};
+
+const VARIABLE_LABEL = {
+  "Rank.Bayes.cond": "Bayes Mean Rank",
+  "Rank.Median.Bayes": "Bayes Median Rank",
+  "Rank.dp": "DP Rank",
+  "Rank.percap": "Per-Capita Rank",
+  "Rank.Total": "Total Rank",
+  "Post_permil": "Posterior Per-Mil",
+  "total_pop_july": "Population",
+  "NY.GDP.PCAP.KD": "GDP per Capita",
+  "life_expectancy_birth": "Life Expectancy"
 };
 
 const VARIABLE_IS_RANK = new Set([
@@ -97,6 +99,29 @@ const COL_LOWER_BDR = '#9d174d';
 const COL_NO_SEL_FILL = '#94a3b8';
 const COL_OUT_FILL = '#cbd5e1';
 
+/* ── Inject scrollable-table styling once ── */
+(function injectTableScrollStyles() {
+  if (document.getElementById('table-scroll-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'table-scroll-styles';
+  style.textContent = `
+    .rank-table-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .rank-table {
+      min-width: 760px;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* ── Population formatter (shared, used everywhere) ── */
+function formatPopulationM(pop) {
+  if (pop == null) return '—';
+  return (pop / 1e6).toFixed(2) + ' M';
+}
+
 /* ── Map open/close ── */
 function setMapOpen(open) {
   mapOpen = open;
@@ -107,35 +132,295 @@ function setMapOpen(open) {
     ? '<i data-lucide="x" width="14" height="14"></i> Hide Map'
     : '<i data-lucide="map" width="14" height="14"></i> Show Map';
   if (typeof lucide !== 'undefined') lucide.createIcons();
-  if (open) setTimeout(() => window._map?.invalidateSize(), 350);
+  if (open) setTimeout(() => window._map?.resize(), 350);
   renderTable(document.getElementById('table-search')?.value || '');
 }
 
-/* ── Leaflet map ── */
-const map = L.map('map', {
-  worldCopyJump: false,
-  maxBounds: [[-90, -180], [90, 180]],
-  maxBoundsViscosity: 0.85,
-  minZoom: 2,
-  maxZoom: 10,
-  bounceAtZoomLimits: true,
-}).setView([20, 10], 2);
-window._map = map;
-
-let tileLayer;
-function applyTiles() {
-  if (tileLayer) map.removeLayer(tileLayer);
+/* ── MapLibre map ── */
+function currentTileUrl() {
   const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  tileLayer = L.tileLayer(
-    dark
-      ? 'https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png'
-      : 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',
-    { attribution: '&copy; CARTO &copy; OSM', subdomains: 'abcd', maxZoom: 19 }
-  ).addTo(map);
+  return dark
+    ? 'https://s.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}.png'
+    : 'https://s.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}.png';
 }
-applyTiles();
+
+function formatSigFig(val, minDecimals = 3) {
+  if (val == null || !Number.isFinite(val)) return '—';
+  const num = Number(val);
+  if (num === 0) return (0).toFixed(minDecimals);
+
+  const magnitude = Math.floor(Math.log10(Math.abs(num)));
+  const neededDecimals = magnitude >= 0 ? minDecimals : Math.max(minDecimals, -magnitude + 1);
+
+  return num.toFixed(neededDecimals);
+}
+
+const map = new maplibregl.Map({
+  container: 'map',
+  style: {
+    version: 8,
+    sources: {
+      basemap: {
+        type: 'raster',
+        tiles: [currentTileUrl()],
+        tileSize: 256,
+        attribution: '© CARTO © OpenStreetMap contributors'
+      }
+    },
+    layers: [{ id: 'basemap', type: 'raster', source: 'basemap' }]
+  },
+  center: [10, 20],
+  zoom: 1.4,
+  minZoom: 0,
+  maxZoom: 10,
+  renderWorldCopies: false,
+  attributionControl: true
+});
+window._map = map;
+map.setMinZoom(-0.5);
+function applyTiles() {
+  const url = currentTileUrl();
+  const source = map.getSource('basemap');
+  if (!source) return;
+  source.tiles = [url];
+  const cache = map.style?.sourceCaches?.['basemap'];
+  if (cache) {
+    cache.clearTiles();
+    cache.update(map.transform);
+  }
+  map.triggerRepaint();
+}
 map.on('themechange', () => setTimeout(applyTiles, 50));
 document.querySelector('[data-theme-toggle]')?.addEventListener('click', () => setTimeout(applyTiles, 80));
+
+/* ── Selected-country pin marker ── */
+let selectedMarker = null;
+
+/* Inject pin styling once, so the file stays self-contained without editing CSS files */
+(function injectPinStyles() {
+  if (document.getElementById('country-pin-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'country-pin-styles';
+  style.textContent = `
+    .country-pin {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: ${COL_SELECTED};
+      border: 2.5px solid ${COL_SELECTED_BDR};
+      box-shadow: 0 1px 4px rgba(0,0,0,0.45), 0 0 0 2px rgba(255,255,255,0.85);
+      cursor: pointer;
+    }
+    .country-pin::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      margin: -3px 0 0 -3px;
+      border-radius: 50%;
+      background: #fff;
+    }
+  `;
+  document.head.appendChild(style);
+})();
+
+/* Fallback centroid: averages the largest ring of a (multi)polygon.
+   Used only if Turf.js isn't loaded on the page. */
+function fallbackCentroid(geometry) {
+  const rings = geometry.type === 'Polygon'
+    ? [geometry.coordinates[0]]
+    : geometry.coordinates.map(poly => poly[0]);
+  let largest = rings[0];
+  let largestArea = 0;
+  rings.forEach(ring => {
+    let area = 0;
+    for (let i = 0; i < ring.length - 1; i++) {
+      area += ring[i][0] * ring[i + 1][1] - ring[i + 1][0] * ring[i][1];
+    }
+    area = Math.abs(area / 2);
+    if (area > largestArea) { largestArea = area; largest = ring; }
+  });
+  let x = 0, y = 0;
+  largest.forEach(pt => { x += pt[0]; y += pt[1]; });
+  return [x / largest.length, y / largest.length];
+}
+
+function getCountryCentroid(geometry) {
+  if (typeof turf !== 'undefined') {
+    try {
+      const feature = { type: 'Feature', geometry, properties: {} };
+      const centerFeature = turf.centerOfMass(feature);
+      return centerFeature.geometry.coordinates;
+    } catch (e) {
+      return fallbackCentroid(geometry);
+    }
+  }
+  return fallbackCentroid(geometry);
+}
+
+function getCountryFeature(iso) {
+  if (!worldGeoJSON || !iso) return null;
+  return worldGeoJSON.features.find(f => f.properties.ISO_A3 === iso) || null;
+}
+
+function showCountryPin(iso) {
+  clearCountryPin();
+  const feature = getCountryFeature(iso);
+  if (!feature) return;
+
+  const center = getCountryCentroid(feature.geometry);
+  if (!center || center.some(v => !Number.isFinite(v))) return;
+
+  const el = document.createElement('div');
+  el.className = 'country-pin';
+  el.title = feature.properties.NAME || feature.properties.name || '';
+
+  selectedMarker = new maplibregl.Marker({ element: el, anchor: 'center' })
+    .setLngLat(center)
+    .addTo(map);
+}
+
+function clearCountryPin() {
+  if (selectedMarker) {
+    selectedMarker.remove();
+    selectedMarker = null;
+  }
+}
+
+/* ── GeoJSON world polygons + country layers ── */
+let worldGeoJSON = null;
+let tooltipPopup = null;
+
+map.on('load', () => {
+  fetch('https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_50m_admin_0_countries.geojson')
+    .then(r => r.json())
+    .then(data => {
+      // Normalize ISO_A3 for every feature (patches -99 codes) so promoteId works cleanly
+      let unkCounter = 0;
+      data.features.forEach(f => {
+        const iso = resolveIso(f);
+        f.properties.ISO_A3 = iso ?? `UNK_${unkCounter++}`;
+      });
+      worldGeoJSON = data;
+
+      map.addSource('countries', {
+        type: 'geojson',
+        data: worldGeoJSON,
+        promoteId: 'ISO_A3'
+      });
+
+      map.addLayer({
+        id: 'countries-fill',
+        type: 'fill',
+        source: 'countries',
+        paint: {
+          'fill-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], COL_SELECTED,
+            ['boolean', ['feature-state', 'notSig'], false], COL_NOT_SIG_FILL,
+            ['==', ['feature-state', 'cmp'], 'higher'], COL_HIGHER_FILL,
+            ['==', ['feature-state', 'cmp'], 'lower'], COL_LOWER_FILL,
+            ['boolean', ['feature-state', 'inFilter'], false], COL_NO_SEL_FILL,
+            ['boolean', ['feature-state', 'outOfFilter'], false], COL_OUT_FILL,
+            ['boolean', ['feature-state', 'hasData'], false], '#d1d5db',
+            '#e2e8f0'
+          ],
+          'fill-opacity': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], 0.95,
+            ['boolean', ['feature-state', 'notSig'], false], 0.22,
+            ['==', ['feature-state', 'cmp'], 'higher'], 0.55,
+            ['==', ['feature-state', 'cmp'], 'lower'], 0.55,
+            ['boolean', ['feature-state', 'inFilter'], false], 0.75,
+            ['boolean', ['feature-state', 'outOfFilter'], false], 0.3,
+            ['boolean', ['feature-state', 'hasData'], false], 0.35,
+            0.3
+          ]
+        }
+      });
+
+      map.addLayer({
+        id: 'countries-border',
+        type: 'line',
+        source: 'countries',
+        paint: {
+          'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], COL_SELECTED_BDR,
+            ['boolean', ['feature-state', 'notSig'], false], COL_NOT_SIG_BDR,
+            ['==', ['feature-state', 'cmp'], 'higher'], COL_HIGHER_BDR,
+            ['==', ['feature-state', 'cmp'], 'lower'], COL_LOWER_BDR,
+            ['boolean', ['feature-state', 'hasData'], false], '#64748b',
+            '#cbd5e1'
+          ],
+          'line-width': [
+            'case',
+            ['boolean', ['feature-state', 'selected'], false], 3,
+            ['boolean', ['feature-state', 'notSig'], false], 1.5,
+            ['==', ['feature-state', 'cmp'], 'higher'], 1.2,
+            ['==', ['feature-state', 'cmp'], 'lower'], 1.2,
+            ['boolean', ['feature-state', 'hasData'], false], 0.8,
+            0.5
+          ]
+        }
+      });
+
+      // Click → select country
+      map.on('click', 'countries-fill', (e) => {
+        const iso = e.features[0]?.properties?.ISO_A3;
+        if (!iso) return;
+        const all = GAMES_DATA[currentGame] || [];
+        const c = all.find(r => r.iso_a3 === iso);
+        if (c) selectCountry(iso);
+      });
+
+      // Hover → tooltip + cursor + border highlight
+      let hoveredIso = null;
+      map.on('mousemove', 'countries-fill', (e) => {
+        const iso = e.features[0]?.properties?.ISO_A3;
+        const all = GAMES_DATA[currentGame] || [];
+        const c = all.find(r => r.iso_a3 === iso);
+        if (!c) {
+          map.getCanvas().style.cursor = '';
+          tooltipPopup?.remove();
+          return;
+        }
+        map.getCanvas().style.cursor = 'pointer';
+
+        if (hoveredIso && hoveredIso !== iso) {
+          map.setFeatureState({ source: 'countries', id: hoveredIso }, { hover: false });
+        }
+        if (iso !== selectedCountry) {
+          map.setFeatureState({ source: 'countries', id: iso }, { hover: true });
+        }
+        hoveredIso = iso;
+
+        const rKey = RANKING_KEY[currentRanking];
+        if (!tooltipPopup) tooltipPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false });
+        tooltipPopup
+          .setLngLat(e.lngLat)
+          .setHTML(`<strong>${c.country}</strong><br>Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>Total medals: ${c.medal_total ?? '—'}<br>Per million: ${c.observed_mpm != null ? formatSigFig(c.observed_mpm) : '—'}`)
+          .addTo(map);
+      });
+
+      map.on('mouseleave', 'countries-fill', () => {
+        map.getCanvas().style.cursor = '';
+        tooltipPopup?.remove();
+        if (hoveredIso) {
+          map.setFeatureState({ source: 'countries', id: hoveredIso }, { hover: false });
+          hoveredIso = null;
+        }
+      });
+
+      if (Object.keys(GAMES_DATA).length) renderMap();
+
+      // If a country was already selected before the geojson finished loading, drop the pin now
+      if (selectedCountry) showCountryPin(selectedCountry);
+    })
+    .catch(err => console.warn('GeoJSON failed to load:', err));
+});
 
 /* ── Helpers ── */
 function getAllData() {
@@ -172,20 +457,24 @@ function fmtCI(c) {
 
 /* ── Detail stat grid (shared) ── */
 function buildDetailStatGrid(c) {
-  const pop = c['population'] != null ? Number(c['population']).toLocaleString() : '—';
   const gdp = c['NY.GDP.PCAP.KD'] != null ? '$' + Number(c['NY.GDP.PCAP.KD']).toLocaleString() : '—';
   const life = c['SP.DYN.LE00.IN'] != null ? Number(c['SP.DYN.LE00.IN']).toFixed(1) + ' yrs' : '—';
-  const post = c['median_estimate_mpm'] != null ? Number(c['median_estimate_mpm']).toFixed(3) : '—';
-  const mpm = c['observed_mpm'] != null ? Number(c['observed_mpm']).toFixed(2) : '—';
-  const rKey = RANKING_KEY[currentRanking];
+  const post = c['median_estimate_mpm'] != null ? formatSigFig(c['median_estimate_mpm']) : '—';
+  const ci = fmtCI(c);
+  const dpRank = c['rank_dp'] ?? '—';
+  const pcRank = c['rank_pc'] ?? '—';
+  const totalRank = c['rank_total'] ?? '—';
+  const medianBetaRank = c['rank_median_beta'] ?? '—';
+
   return `<div class="detail-stat-grid">
-    <div class="detail-stat-item"><span class="detail-stat-val">${c[rKey] ?? '—'}</span><span class="detail-stat-lbl">Selected rank</span></div>
-    <div class="detail-stat-item"><span class="detail-stat-val">${c.medal_total ?? '—'}</span><span class="detail-stat-lbl">Total medals</span></div>
-    <div class="detail-stat-item"><span class="detail-stat-val">${mpm}</span><span class="detail-stat-lbl">Medals / million</span></div>
-    <div class="detail-stat-item"><span class="detail-stat-val">${pop}</span><span class="detail-stat-lbl">Population</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${ci}</span><span class="detail-stat-lbl">95% credible interval</span></div>
     <div class="detail-stat-item"><span class="detail-stat-val">${gdp}</span><span class="detail-stat-lbl">GDP per capita</span></div>
     <div class="detail-stat-item"><span class="detail-stat-val">${life}</span><span class="detail-stat-lbl">Life expectancy</span></div>
-    <div class="detail-stat-item"><span class="detail-stat-val">${post}</span><span class="detail-stat-lbl">Post. median rate</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${post}</span><span class="detail-stat-lbl">Posterior median rate</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${dpRank}</span><span class="detail-stat-lbl">DP rank</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${pcRank}</span><span class="detail-stat-lbl">Per-capita rank</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${totalRank}</span><span class="detail-stat-lbl">Total-medals rank</span></div>
+    <div class="detail-stat-item"><span class="detail-stat-val">${medianBetaRank}</span><span class="detail-stat-lbl">Bayes median rank</span></div>
   </div>`;
 }
 
@@ -194,6 +483,10 @@ function buildDetailHTML(c, colspan) {
   return `<tr class="detail-row" data-detail-iso="${c.iso_a3}">
     <td colspan="${colspan}" style="padding:0">
       <div class="detail-expand">
+        <div class="detail-panel-header">
+          <img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'">
+          <span class="detail-panel-title">${c.country}</span>
+        </div>
         ${buildDetailStatGrid(c)}
       </div>
     </td>
@@ -287,42 +580,9 @@ function updateSliderFill() {
   fill.style.width = (right - left) + '%';
 }
 
-/* ── Map render ── */
-let choroplethLayer = null;
-
-function getMapStyle(feature, dataByIso, inSet, selRank) {
-  const iso = resolveIso(feature);
-  if (!iso) return { fillColor: '#e2e8f0', fillOpacity: 0.3, color: '#cbd5e1', weight: 0.5 };
-  const c = dataByIso[iso];
-  if (!c) return { fillColor: '#d1d5db', fillOpacity: 0.35, color: '#9ca3af', weight: 0.8 };
-  const inFilter = inSet.has(iso);
-  if (!selectedCountry) {
-    return {
-      fillColor: inFilter ? COL_NO_SEL_FILL : COL_OUT_FILL,
-      fillOpacity: inFilter ? 0.75 : 0.35,
-      color: '#64748b', weight: 1
-    };
-  }
-  const rKey = RANKING_KEY[currentRanking];
-  const selectedData = dataByIso[selectedCountry];
-  const isSelected = iso === selectedCountry;
-  const isNotSig = selectedData ? (selectedData[iso] === true) : false;
-  const countryRank = c[rKey];
-  if (isSelected) return { fillColor: COL_SELECTED, fillOpacity: 0.95, color: COL_SELECTED_BDR, weight: 3 };
-  if (!inFilter) return { fillColor: COL_OUT_FILL, fillOpacity: 0.3, color: '#9ca3af', weight: 0.8 };
-  if (isNotSig) return { fillColor: COL_NOT_SIG_FILL, fillOpacity: 0.22, color: COL_NOT_SIG_BDR, weight: 1.5 };
-  if (selRank != null && countryRank != null) {
-    return countryRank < selRank
-      ? { fillColor: COL_HIGHER_FILL, fillOpacity: 0.55, color: COL_HIGHER_BDR, weight: 1.2 }
-      : { fillColor: COL_LOWER_FILL, fillOpacity: 0.55, color: COL_LOWER_BDR, weight: 1.2 };
-  }
-  return { fillColor: COL_NO_SEL_FILL, fillOpacity: 0.55, color: '#64748b', weight: 1 };
-}
-
+/* ── Map render (MapLibre feature-state driven, no layer teardown) ── */
 function renderMap() {
-  if (choroplethLayer) map.removeLayer(choroplethLayer);
-  choroplethLayer = null;
-  if (!worldGeoJSON) return;
+  if (!worldGeoJSON || !map.getSource('countries')) return;
 
   const all = GAMES_DATA[currentGame] || [];
   const filtered = getFilteredData();
@@ -330,30 +590,44 @@ function renderMap() {
   const rKey = RANKING_KEY[currentRanking];
   const dataByIso = {};
   all.forEach(c => dataByIso[c.iso_a3] = c);
-  const selRank = selectedCountry ? (dataByIso[selectedCountry]?.[rKey] ?? null) : null;
+  const selectedData = selectedCountry ? dataByIso[selectedCountry] : null;
+  const selRank = selectedData ? (selectedData[rKey] ?? null) : null;
 
-  choroplethLayer = L.geoJSON(worldGeoJSON, {
-    style: feature => getMapStyle(feature, dataByIso, inSet, selRank),
-    onEachFeature: (feature, layer) => {
-      const iso = resolveIso(feature);
-      if (!iso) return;
-      const c = dataByIso[iso];
-      if (!c) return;
-      if (inSet.has(iso)) {
-        layer.bindTooltip(
-          `<strong>${c.country}</strong><br>Rank (${currentRanking}): ${c[rKey] ?? '—'}<br>Total medals: ${c.medal_total ?? '—'}<br>Per million: ${c.observed_mpm != null ? Number(c.observed_mpm).toFixed(2) : '—'}`,
-          { sticky: true }
-        );
-        layer.on({
-          click: () => selectCountry(iso),
-          mouseover: e => { if (iso !== selectedCountry) e.target.setStyle({ weight: 2.5, color: '#111827' }); },
-          mouseout: e => choroplethLayer.resetStyle(e.target)
-        });
-      } else {
-        layer.on({ mouseover: () => {}, mouseout: () => {} });
-      }
+  worldGeoJSON.features.forEach(feature => {
+    const iso = feature.properties.ISO_A3;
+    if (!iso || iso.startsWith('UNK_')) return;
+
+    const c = dataByIso[iso];
+    const hasData = !!c;
+    const inFilter = inSet.has(iso);
+    const isSelected = iso === selectedCountry;
+    const isNotSig = selectedData ? (selectedData[iso] === true) : false;
+    const countryRank = c ? c[rKey] : null;
+
+    let cmp = null;
+    if (selectedCountry && !isSelected && hasData && inFilter && !isNotSig && selRank != null && countryRank != null) {
+      cmp = countryRank < selRank ? 'higher' : 'lower';
     }
-  }).addTo(map);
+
+    map.setFeatureState(
+      { source: 'countries', id: iso },
+      {
+        hasData,
+        inFilter: !selectedCountry ? inFilter : false,
+        outOfFilter: !selectedCountry ? !inFilter : (selectedCountry && !isSelected && !inFilter),
+        selected: isSelected,
+        notSig: selectedCountry ? (isNotSig && inFilter) : false,
+        cmp
+      }
+    );
+  });
+
+  // Keep the pin in sync with whatever is currently selected
+  if (selectedCountry) {
+    showCountryPin(selectedCountry);
+  } else {
+    clearCountryPin();
+  }
 
   renderMapLegend();
 }
@@ -371,14 +645,15 @@ function renderMapLegend() {
       <span style="width:14px;height:14px;border-radius:3px;background:rgba(245,158,11,0.22);display:inline-block;border:1.5px solid ${COL_NOT_SIG_BDR}"></span> Not significantly different
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:${COL_HIGHER_FILL};display:inline-block"></span> Ranked higher
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_HIGHER_FILL};display:inline-block"></span> Significantly ranked higher
     </span>
     <span style="display:inline-flex;align-items:center;gap:5px">
-      <span style="width:14px;height:14px;border-radius:3px;background:${COL_LOWER_FILL};display:inline-block"></span> Ranked lower
+      <span style="width:14px;height:14px;border-radius:3px;background:${COL_LOWER_FILL};display:inline-block"></span> Significantly ranked lower
     </span>
   `;
 }
 
+/* ── Table render ── */
 /* ── Table render ── */
 function renderTable(search) {
   const thead = document.getElementById('ranking-thead');
@@ -386,31 +661,37 @@ function renderTable(search) {
   const rKey = RANKING_KEY[currentRanking];
   const isBayesRank = currentRanking === 'Rank.Bayes.cond' || currentRanking === 'Rank.Median.Bayes';
 
-  const colspan = mapOpen ? 5 : (isBayesRank ? 8 : 9);
+  const vKey = VARIABLE_KEY[currentVariable];
+  const baseKeys = new Set([rKey, 'medal_total', 'population', 'observed_mpm', 'medals.multi.winners', 'rank_mean_beta']);
+  const showVariableCol = vKey && !baseKeys.has(vKey);
 
-  /* ── Header ── */
-  if (thead) {
-    if (mapOpen) {
-      thead.innerHTML = `<tr>
-        <th class="rank-num"><sub>#</sub></th>
-        <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"></span></th>
-        <th data-sort="country">Country<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="population">Pop. (M)<span class="sort-arrow"></span></th>
-      </tr>`;
-    } else {
-      thead.innerHTML = `<tr>
-        <th class="rank-num"><sub>#</sub></th>
-        <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"></span></th>
-        <th></th>
-        <th data-sort="country">Country<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="population">Population<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"></span></th>
-        <th style="text-align:right" data-sort="medals.multi.winners">Multi<span class="sort-arrow"></span></th>
-        ${!isBayesRank ? `<th style="text-align:right" data-sort="rank_mean_beta">Bayes Mean Rank<span class="sort-arrow"></span></th>` : ``}
-      </tr>`;
+  const colCount = 7 + (!isBayesRank ? 1 : 0) + (showVariableCol ? 1 : 0);
+
+  const tableEl = thead?.closest('table');
+  if (tableEl) {
+    tableEl.classList.add('rank-table');
+    let wrapper = tableEl.parentElement;
+    if (!wrapper || !wrapper.classList.contains('rank-table-scroll')) {
+      wrapper = document.createElement('div');
+      wrapper.className = 'rank-table-scroll';
+      tableEl.parentElement.insertBefore(wrapper, tableEl);
+      wrapper.appendChild(tableEl);
     }
+  }
+
+  if (thead) {
+thead.innerHTML = `<tr>
+  <th class="rank-num"><sub>#</sub></th>
+  <th class="rank-num" data-sort="${rKey}">Rank<span class="sort-arrow"></span></th>
+  <th data-sort="country">Country<span class="sort-arrow"></span></th>
+  <th style="text-align:right" data-sort="medal_total">Total<span class="sort-arrow"></span></th>
+  <th style="text-align:right" data-sort="population">Population<span class="sort-arrow"></span></th>
+  <th style="text-align:right" data-sort="observed_mpm">Per-mill<span class="sort-arrow"></span></th>
+  <th style="text-align:right" data-sort="medals.multi.winners">Multi<span class="sort-arrow"></span></th>
+  ${!isBayesRank ? `<th style="text-align:right" data-sort="rank_mean_beta">Bayes Mean Rank<span class="sort-arrow"></span></th>` : ``}
+  ${showVariableCol ? `<th style="text-align:right" data-sort="${vKey}">${VARIABLE_LABEL[currentVariable] || currentVariable}<span class="sort-arrow"></span></th>` : ``}
+</tr>`;
+
     thead.querySelectorAll('th[data-sort]').forEach(th => {
       th.addEventListener('click', () => {
         const key = th.dataset.sort;
@@ -428,7 +709,6 @@ function renderTable(search) {
     });
   }
 
-  /* ── Data ── */
   let data = getFilteredData();
   if (search) data = data.filter(c => c.country.toLowerCase().includes(search.toLowerCase()));
   if (sortKey) {
@@ -446,7 +726,7 @@ function renderTable(search) {
   if (countEl) countEl.textContent = `${data.length} countries`;
 
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${colCount}" style="text-align:center;padding:2rem;color:var(--color-text-muted)">No results</td></tr>`;
     return;
   }
 
@@ -462,25 +742,10 @@ function renderTable(search) {
       rowStyle = (selectedData[c.iso_a3] === true) ? 'background-color:rgba(245,158,11,0.12)' : 'opacity:0.4';
     }
 
-    const popRaw = c.population != null ? Number(c.population).toLocaleString() : '—';
-    const popM = c.population != null ? (c.population / 1e6).toFixed(2) : '—';
-    const mpm = c.observed_mpm != null ? Number(c.observed_mpm).toFixed(2) : '—';
+    const popM = formatPopulationM(c.population);
+    const mpm = formatSigFig(c.observed_mpm);
     const multi = c['medals.multi.winners'] ?? '—';
     const flagCell = `<td class="flag-cell"><img src="https://flagcdn.com/24x18/${c.iso_a2?.toLowerCase()}.png" alt="${c.country} flag" width="24" height="18" loading="lazy" onerror="this.style.display='none'"></td>`;
-
-    if (mapOpen) {
-      const mapRankContent = isBayesRank
-        ? `${c[rKey] ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span>`
-        : `${c[rKey] ?? '—'}`;
-      const mapRowHtml = `<tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
-        <td class="rank-num sub-rank-cell">${subRank}</td>
-        <td class="rank-num">${mapRankContent}</td>
-        <td class="country-name">${c.country}</td>
-        <td class="medal-cell medal-gold">${c.medal_total ?? '—'}</td>
-        <td style="text-align:right">${popM}</td>
-      </tr>`;
-      return mapRowHtml;
-    }
 
     const rankCellContent = isBayesRank
       ? `${c[rKey] ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span>`
@@ -488,21 +753,25 @@ function renderTable(search) {
     const bayesMeanCell = !isBayesRank
       ? `<td style="text-align:right">${c.rank_mean_beta ?? '—'}<br><span style="font-size:0.8em;opacity:0.7">${fmtCI(c)}</span></td>`
       : '';
+    const variableCell = showVariableCol
+      ? `<td style="text-align:right">${formatVal(c[vKey], vKey)}</td>`
+      : '';
 
-    const rowHtml = `<tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
-      <td class="rank-num sub-rank-cell">${subRank}</td>
-      <td class="rank-num">${rankCellContent}</td>
-      ${flagCell}
-      <td class="country-name">${c.country}</td>
-      <td class="medal-cell medal-gold">${c.medal_total ?? '—'}</td>
-      <td style="text-align:right">${popRaw}</td>
-      <td style="text-align:right">${mpm}</td>
-      <td style="text-align:right">${multi}</td>
-      ${bayesMeanCell}
-    </tr>`;
+const rowHtml = `<tr data-iso="${c.iso_a3}" style="${rowStyle}" class="country-row">
+  <td class="rank-num sub-rank-cell">${subRank}</td>
+  <td class="rank-num">${rankCellContent}</td>
+  <td class="country-name">${c.country}</td>
+  <td class="medal-cell">${c.medal_total ?? '—'}</td>
+  <td style="text-align:right">${popM}</td>
+  <td style="text-align:right">${mpm}</td>
+  <td style="text-align:right">${multi}</td>
+  ${bayesMeanCell}
+  ${variableCell}
+</tr>`;
 
-    if (selectedCountry && c.iso_a3 === selectedCountry) {
-      return rowHtml + buildDetailHTML(c, colspan);
+    const mapIsOpen = document.getElementById('dash-layout')?.classList.contains('map-open');
+    if (selectedCountry && c.iso_a3 === selectedCountry && !mapIsOpen) {
+      return rowHtml + buildDetailHTML(c, colCount);
     }
     return rowHtml;
   });
@@ -528,8 +797,28 @@ function renderTable(search) {
 /* ── Select country ── */
 function selectCountry(iso) {
   selectedCountry = selectedCountry === iso ? null : iso;
+  if (selectedCountry) {
+    showCountryPin(selectedCountry);
+    centerMapOnCountry(selectedCountry);
+  } else {
+    clearCountryPin();
+  }
   renderMap();
   renderTable(document.getElementById('table-search')?.value);
+}
+
+function centerMapOnCountry(iso) {
+  const feature = getCountryFeature(iso);
+  if (!feature) return;
+
+  const center = getCountryCentroid(feature.geometry);
+  if (!center || center.some(v => !Number.isFinite(v))) return;
+
+  map.easeTo({
+    center,
+    zoom: map.getZoom(),
+    duration: 600
+  });
 }
 
 /* ── Refresh ── */
@@ -544,6 +833,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('sel-games')?.addEventListener('change', e => {
     currentGame = e.target.value;
     selectedCountry = null;
+    clearCountryPin();
     refresh();
   });
 
@@ -564,6 +854,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-reset')?.addEventListener('click', () => {
     selectedCountry = null;
+    clearCountryPin();
     refresh();
   });
 
